@@ -2,6 +2,7 @@
 Any questions ask Mikkel
 '''
 import numpy as np
+import os
 import matplotlib.pyplot as plt
 from shapely.geometry.polygon import LinearRing
 import math
@@ -17,7 +18,8 @@ FENCE_OFFSET = 0.5
 
 
 def get_fence_position(filename):
-    file_read = pd.read_json(filename, orient='columns')
+    basePath = os.path.dirname(os.path.abspath(__file__))
+    file_read = pd.read_json(basePath + filename, orient='columns')
     fileLength = len(file_read['mission']['items'])
 
     path_fence = []
@@ -28,7 +30,7 @@ def get_fence_position(filename):
             lat = file_read['mission']['items'][i]['params'][5]
             alt = file_read['mission']['items'][i]['params'][6]
 
-            if alt is 0:
+            if alt == 0:
                 break
 
             hemisphere, zone, letter, e, n = uc.geodetic_to_utm (lat,lon)
@@ -48,7 +50,6 @@ def calculate_flight_path(path_fence):
     else:
         poly_line_offset = poly_line_offset_left
 
-    fence_x,fence_y = poly_line.xy
     flight_path_x, flight_path_y = poly_line_offset.xy
 
     return flight_path_x, flight_path_y
@@ -125,7 +126,7 @@ def calculate_photo_orientation(path_x, path_y, path_fence):
     return fixed_angles
 
 if __name__ == "__main__":
-    hemisphere, zone, letter, path_fence = get_fence_position("fence_location.plan")
+    hemisphere, zone, letter, path_fence = get_fence_position("/fence_location.plan")
     flight_path_x, flight_path_y = calculate_flight_path(path_fence)
     photo_pos_x, photo_pos_y = calculate_photo_positions(flight_path_x, flight_path_y)
     photo_orientation = calculate_photo_orientation(photo_pos_x, photo_pos_y, path_fence)
