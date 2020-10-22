@@ -144,7 +144,7 @@ class Pathplanclass():
             writeData = csv.writer(file)#,quoting=csv.QUOTE_ALL)
 
             for x in range(len(data)):
-                writeData.writerow([data[x][0],data[x][1],data[x][2]])
+                writeData.writerow([data[x][1],data[x][0],data[x][2]])
 
 
     def run_main(self,plan_file):
