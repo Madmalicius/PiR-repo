@@ -1,4 +1,4 @@
-prefix=/home/milan/HoleDetector/PiR-repo/catkin_ws/devel
+prefix=/home/mikkel/PiR-repo/catkin_ws/devel
 
 Name: hole_detector
 Description: Description of hole_detector

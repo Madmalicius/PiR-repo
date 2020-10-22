@@ -1,0 +1,8 @@
+prefix=/home/mikkel/PiR-repo/catkin_ws/install
+
+Name: hole_detector
+Description: Description of hole_detector
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
