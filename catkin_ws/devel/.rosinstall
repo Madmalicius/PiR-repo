@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/milan/HoleDetector/PiR-repo/catkin_ws/devel/setup.sh
