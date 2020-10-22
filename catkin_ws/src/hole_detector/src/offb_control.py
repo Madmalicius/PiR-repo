@@ -3,7 +3,7 @@
 import rospy
 
 # 3D point & Stamped Pose msgs
-from geometry_msgs.msg import Point, PoseStamped
+from geometry_msgs.msg import Point, PoseStamped, Quaternion
 # import all mavros messages and services
 from mavros_msgs.msg import *
 from mavros_msgs.srv import *
@@ -107,14 +107,18 @@ class Controller:
 
         # A Message for the current local position of the drone
         self.local_pos = Point(0.0, 0.0, 2.0)
-        self.local_orient = [0.0, 0.0, 0.0, 0.0]
+        self.local_orient = Quaternion(0.0, 0.0, 0.0, 0.0)
 
         # initial values for setpoints
         self.sp.pose.position.x = 0.0
         self.sp.pose.position.y = 0.0
+
+        self.sp.pose.orientation.x, self.sp.pose.orientation.y, self.sp.pose.orientation.z, self.sp.pose.orientation.w = self.euler_to_quaternion(0,0,0)
         self.update = 0
         #Uncertainty for position control
-        self.unc = 0.1
+        self.uncertain_dist = 0.1
+        #2 degrees
+        self.uncertain_rad = 0.035
 
         basePath = os.path.dirname(os.path.abspath(__file__))
         # open file in read mode
@@ -151,40 +155,41 @@ class Controller:
 
         return [qx, qy, qz, qw]
 
+    def quaternion_to_euler(self, x, y, z, w):
+
+        t0 = +2.0 * (w * x + y * z)
+        t1 = +1.0 - 2.0 * (x * x + y * y)
+        roll = math.atan2(t0, t1)
+        t2 = +2.0 * (w * y - z * x)
+        t2 = +1.0 if t2 > +1.0 else t2
+        t2 = -1.0 if t2 < -1.0 else t2
+        pitch = math.asin(t2)
+        t3 = +2.0 * (w * z + x * y)
+        t4 = +1.0 - 2.0 * (y * y + z * z)
+        yaw = math.atan2(t3, t4)
+
+        return [yaw, pitch, roll]
+
     ## Update setpoint message
     def updateSp(self):
-        #print("self =" + str(self.local_pos.y) + "setpoint=" + str(self.sp.pose.position.y))
-        if ((self.local_pos.x <= self.sp.pose.position.x + self.unc) and (self.local_pos.x >= self.sp.pose.position.x - self.unc)) and ((self.local_pos.y <= self.sp.pose.position.y + self.unc) and (self.local_pos.y >= self.sp.pose.position.y - self.unc)):
+        #Calculate distance to point
+        self.distance = math.sqrt((self.local_pos.x - self.sp.pose.position.x)** 2 + (self.local_pos.y - self.sp.pose.position.y)** 2)
+        self.rotation = self.quaternion_to_euler(self.local_orient.x, self.local_orient.y, self.local_orient.z, self.local_orient.w)
+        print(self.rotation)
+        if ((self.distance <= self.uncertain_dist) and (abs(self.rotation[0] - math.radians(float(self.coordinates[self.update][2]))) <= self.uncertain_rad)):
             print("diller")
             self.sp.pose.position.x = float(self.coordinates[self.update][0])
             self.sp.pose.position.y = float(self.coordinates[self.update][1])
             self.sp.pose.orientation.x, self.sp.pose.orientation.y, self.sp.pose.orientation.z, self.sp.pose.orientation.w = self.euler_to_quaternion(0,0,math.radians(float(self.coordinates[self.update][2])))
             print(self.sp.pose.orientation)
             self.update+=1
+            #Return home
             if self.update >= self.length:
                 self.sp.pose.position.x = 0.0
                 self.sp.pose.position.y = 0.0
+                self.sp.pose.position.z = 0.0
         else:
             pass
-
-        #self.sp.position.x = self.local_pos.x
-        #self.sp.position.y = self.local_pos.y
-
-    def x_dir(self):
-    	self.sp.position.x = self.local_pos.x + 5
-    	self.sp.position.y = self.local_pos.y
-
-    def neg_x_dir(self):
-    	self.sp.position.x = self.local_pos.x - 5
-    	self.sp.position.y = self.local_pos.y
-
-    def y_dir(self):
-    	self.sp.position.x = self.local_pos.x
-    	self.sp.position.y = self.local_pos.y + 5
-
-    def neg_y_dir(self):
-    	self.sp.position.x = self.local_pos.x
-    	self.sp.position.y = self.local_pos.y - 5
 
 
 # Main function
