@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/mikkel/PiR-repo/catkin_ws/install/setup.sh
