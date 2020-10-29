@@ -78,7 +78,7 @@ class Pathplanclass():
         new_path_y = []
         for i in range(len(path_x)-1):
             path_length = math.sqrt(((path_x[i]-path_x[i+1])**2)+((path_y[i]-path_y[i+1])**2)) 
-            N = int(path_length/(self.FIELD_OF_VIEW))+2
+            N = math.ceil(path_length/(self.FIELD_OF_VIEW))+1
             delta_path_x = np.linspace(path_x[i], path_x[i+1], N) # endpoit false for testing only
             delta_path_y = np.linspace(path_y[i], path_y[i+1], N)
             new_path_x = np.concatenate((new_path_x, delta_path_x))
@@ -157,17 +157,14 @@ class Pathplanclass():
         fixed_x = np.roll(flight_path_x,-shift)
         fixed_y = np.roll(flight_path_y,-shift)
 
-        fixed_x = np.append(fixed_x, fixed_x[0])
-        fixed_y = np.append(fixed_y, fixed_y[0])
-
         return fixed_x, fixed_y
 
 
     def run_main(self,plan_file):
         hemisphere, zone, letter, path_fence = self.get_fence_position(plan_file) 
         flight_path_x, flight_path_y = self.calculate_flight_path(path_fence)
-        flight_path_x, flight_path_y = self.fix_start_point(path_fence, flight_path_x, flight_path_y)
         photo_pos_x, photo_pos_y = self.calculate_photo_positions(flight_path_x, flight_path_y)
+        photo_pos_x, photo_pos_y = self.fix_start_point(path_fence, photo_pos_x, photo_pos_y)
         photo_orientation = self.calculate_photo_orientation(photo_pos_x, photo_pos_y) # roation around z-axis
 
         lat,lon = self.convert_utm_to_lon_lat(hemisphere,zone,photo_pos_x,photo_pos_y) 

@@ -53,9 +53,6 @@ def calculate_photo_positions(path_x, path_y):
     for i in range(len(path_x)-1):
         path_length = math.sqrt(((path_x[i]-path_x[i+1])**2)+((path_y[i]-path_y[i+1])**2)) 
         N = math.ceil(path_length/(FIELD_OF_VIEW))+1
-        #print(N)
-        #print(path_length)
-        #print(path_x[i])
         delta_path_x = np.linspace(path_x[i], path_x[i+1], N) # endpoit false for testing only
         delta_path_y = np.linspace(path_y[i], path_y[i+1], N)
         new_path_x = np.concatenate((new_path_x, delta_path_x))
