@@ -45,9 +45,6 @@ def calculate_flight_path(path_fence):
 
     flight_path_x, flight_path_y = poly_line_offset.xy
 
-    print(flight_path_x)
-    print(flight_path_y)
-
     return flight_path_x, flight_path_y
 
 def calculate_photo_positions(path_x, path_y): 
