@@ -4,7 +4,7 @@ Repository for Project in Robotics
 ## Needed python packages
 To install the needed python packages run the following command
 ```
-pip install os math csv numpy matplotlib shapely scipy pandas opencv
+pip install os math csv numpy matplotlib shapely scipy pandas opencv-python imutils
 ```
 
 
