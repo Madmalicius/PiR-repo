@@ -5,6 +5,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from shapely.geometry.polygon import LinearRing
+from scipy.spatial.distance import cdist
 import math
 from utm import utmconv
 import pandas as pd
@@ -19,9 +20,6 @@ def get_fence_position(filename):
     basePath = os.path.dirname(os.path.abspath(__file__))
     file_read = pd.read_csv(basePath + filename,)
     file_np = file_read.to_numpy()
-
-
-    path_fence = []
 
     x, y = file_np.T
 
@@ -99,10 +97,25 @@ def save_csv(fence_x, fence_y, ori):
     return
 
 
+def fix_start_point(path_fence, flight_path_x, flight_path_y):
+
+    node = path_fence[0]
+    nodes = zip(flight_path_x,flight_path_y)
+
+    shift = cdist([node], nodes).argmin()
+
+    fixed_x = np.roll(flight_path_x,-shift)
+    fixed_y = np.roll(flight_path_y,-shift)
+
+    fixed_x = np.append(fixed_x, fixed_x[0])
+    fixed_y = np.append(fixed_y, fixed_y[0])
+
+    return fixed_x, fixed_y
 
 if __name__ == "__main__":
     path_fence = get_fence_position("/hca_fence_complex_coordinates.csv")
     flight_path_x, flight_path_y = calculate_flight_path(path_fence)
+    flight_path_x, flight_path_y = fix_start_point(path_fence,flight_path_x, flight_path_y)
     photo_pos_x, photo_pos_y = calculate_photo_positions(flight_path_x, flight_path_y)
     photo_orientation = calculate_photo_orientation(photo_pos_x, photo_pos_y)
 
