@@ -16,7 +16,7 @@ class Pathplanclass():
     def __init__(self):
         
         #plotting data
-        self.plotData =  True
+        self.plotData =  False
 
         self.plan_file = "/fence_location.plan"
         self.csv_filename = 'drone_path.csv'
@@ -176,7 +176,7 @@ class Pathplanclass():
         
         self.write_csv(pos,self.csv_filename)
 
-        print(len(pos))
+        #print(len(pos))
 
 
 

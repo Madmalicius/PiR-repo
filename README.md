@@ -1,6 +1,12 @@
 # PiR-repo
 Repository for Project in Robotics 
 
+## Needed python packages
+To install the needed python packages run the following command
+```
+pip install os math csv numpy matplotlib shapely scipy pandas opencv-python imutils
+```
+
 
 ## Run Google Maps Interface
 To run the Google Maps interface, a local server needs to be run. One quick way to do this is to use npm.
