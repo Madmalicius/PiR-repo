@@ -6,6 +6,6 @@ roslaunch eit_playground posix.launch vehicle:=sdu_drone_mono_cam env:=hca_airpo
 
 cd PiR-repo/catkin_ws
 
-source /devel/setup.bash
+source devel/setup.bash
 
-rosrun hole_detector offb_control
+rosrun hole_detector offb_control.py
