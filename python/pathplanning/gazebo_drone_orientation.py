@@ -29,7 +29,7 @@ def get_fence_position(filename):
     #    file_read[i][0]
 
     #FOR TESTING
-    # path_fence = ([[9,7],[8,9],[8,11],[9,12],[11,12],[11,11],[12,11],[12,10],[13,9],[13,8],[12,7],[9,7]])
+    #path_fence = ([9,7],[8,9],[8,11],[9,12],[11,12],[11,11],[12,11],[12,10],[13,9],[13,8],[12,7],[9,7])
     #
     return path_fence
 
@@ -45,6 +45,9 @@ def calculate_flight_path(path_fence):
 
     flight_path_x, flight_path_y = poly_line_offset.xy
 
+    print(flight_path_x)
+    print(flight_path_y)
+
     return flight_path_x, flight_path_y
 
 def calculate_photo_positions(path_x, path_y): 
@@ -52,7 +55,10 @@ def calculate_photo_positions(path_x, path_y):
     new_path_y = []
     for i in range(len(path_x)-1):
         path_length = math.sqrt(((path_x[i]-path_x[i+1])**2)+((path_y[i]-path_y[i+1])**2)) 
-        N = int(path_length/(FIELD_OF_VIEW))+2
+        N = math.ceil(path_length/(FIELD_OF_VIEW))+1
+        #print(N)
+        #print(path_length)
+        #print(path_x[i])
         delta_path_x = np.linspace(path_x[i], path_x[i+1], N) # endpoit false for testing only
         delta_path_y = np.linspace(path_y[i], path_y[i+1], N)
         new_path_x = np.concatenate((new_path_x, delta_path_x))
@@ -66,12 +72,12 @@ def calculate_photo_orientation(path_x, path_y):
 
         #get angle at each point (line seqments)
         if(i == len(path_x)-1):
-            angle = math.atan2(path_y[i]-path_y[i-1], path_x[i]-path_x[i-1]) * 180 / 3.1415
+            angle = math.atan2(path_y[i]-path_y[i-1], path_x[i]-path_x[i-1]) * 180 / math.pi
         else:
             if(path_x[i] == path_x[i+1] and path_y[i] == path_y[i+1]):
-                angle = math.atan2(path_y[i]-path_y[i-1], path_x[i]-path_x[i-1]) * 180 / 3.1415 
+                angle = math.atan2(path_y[i]-path_y[i-1], path_x[i]-path_x[i-1]) * 180 / math.pi
             else:    
-                angle = math.atan2(path_y[i+1]-path_y[i], path_x[i+1]-path_x[i]) * 180 / 3.1415
+                angle = math.atan2(path_y[i+1]-path_y[i], path_x[i+1]-path_x[i]) * 180 / math.pi
 
         #map range from -180;180 to 0;360 deg where 0 deg is along x axis
         angle = (angle + 360)%360
@@ -107,16 +113,13 @@ def fix_start_point(path_fence, flight_path_x, flight_path_y):
     fixed_x = np.roll(flight_path_x,-shift)
     fixed_y = np.roll(flight_path_y,-shift)
 
-    fixed_x = np.append(fixed_x, fixed_x[0])
-    fixed_y = np.append(fixed_y, fixed_y[0])
-
     return fixed_x, fixed_y
 
 if __name__ == "__main__":
     path_fence = get_fence_position("/hca_fence_complex_coordinates.csv")
     flight_path_x, flight_path_y = calculate_flight_path(path_fence)
-    flight_path_x, flight_path_y = fix_start_point(path_fence,flight_path_x, flight_path_y)
     photo_pos_x, photo_pos_y = calculate_photo_positions(flight_path_x, flight_path_y)
+    photo_pos_x, photo_pos_y = fix_start_point(path_fence, photo_pos_x, photo_pos_y)
     photo_orientation = calculate_photo_orientation(photo_pos_x, photo_pos_y)
 
     fence_x,fence_y = zip(*path_fence)
