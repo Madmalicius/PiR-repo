@@ -1,7 +1,7 @@
 roslaunch mavros px4.launch fcu_url:="udp://:14540@127.0.0.1:14557"
 
 
-roslaunch eit_playground posix.launch vehicle:=sdu_drone_mono_cam env:=hca_airport_fence2
+roslaunch eit_playground posix.launch vehicle:=sdu_drone_mono_cam env:=hca_airport_fence_complex
 
 
 cd PiR-repo/catkin_ws
