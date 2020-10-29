@@ -179,14 +179,15 @@ class Controller:
         self.distance = math.sqrt((self.local_pos.x - self.sp.pose.position.x)** 2 + (self.local_pos.y - self.sp.pose.position.y)** 2)
         y, p, r = self.quaternion_to_euler(self.local_orient.x, self.local_orient.y, self.local_orient.z, self.local_orient.w)
         #Calculate rotation difference
-        self.rotation = y - math.radians(float(self.coordinates[self.update][2]))
+        yaw, pitch, roll = self.quaternion_to_euler(self.sp.pose.orientation.x, self.sp.pose.orientation.y, self.sp.pose.orientation.z, self.sp.pose.orientation.w)
+        self.rotation = y - yaw
         self.rotation = abs((self.rotation + math.pi) % (math.pi*2) - math.pi)
         print(self.rotation)
-        #self.sp.pose.orientation.x, self.sp.pose.orientation.y, self.sp.pose.orientation.z, self.sp.pose.orientation.w = self.euler_to_quaternion(0,0,math.radians(float(self.coordinates[self.update][2])))
         if ((self.distance <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad)):
             print("diller")
             self.sp.pose.position.x = float(self.coordinates[self.update][0])
             self.sp.pose.position.y = float(self.coordinates[self.update][1])
+            print(self.sp.pose.position.x, self.sp.pose.position.y, self.coordinates[self.update][2])
             self.sp.pose.orientation.x, self.sp.pose.orientation.y, self.sp.pose.orientation.z, self.sp.pose.orientation.w = self.euler_to_quaternion(0,0,math.radians(float(self.coordinates[self.update][2])))
             print(self.sp.pose.orientation)
             self.update+=1
