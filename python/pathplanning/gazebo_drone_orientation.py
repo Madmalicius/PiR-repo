@@ -13,7 +13,7 @@ import pandas as pd
 #FIELD OF VIEW OF CAMERA IN METERS
 FIELD_OF_VIEW = 2
 #OFFSET OF DRONE PATH FROM FENCE
-FENCE_OFFSET = 2
+FENCE_OFFSET = 2.5
 
 
 def get_fence_position(filename):

@@ -178,12 +178,13 @@ class Controller:
         #Calculate distance to point
         self.distance = math.sqrt((self.local_pos.x - self.sp.pose.position.x)** 2 + (self.local_pos.y - self.sp.pose.position.y)** 2)
         y, p, r = self.quaternion_to_euler(self.local_orient.x, self.local_orient.y, self.local_orient.z, self.local_orient.w)
+        self.height = abs(self.local_pos.z - self.sp.pose.position.z)
         #Calculate rotation difference
         yaw, pitch, roll = self.quaternion_to_euler(self.sp.pose.orientation.x, self.sp.pose.orientation.y, self.sp.pose.orientation.z, self.sp.pose.orientation.w)
         self.rotation = y - yaw
         self.rotation = abs((self.rotation + math.pi) % (math.pi*2) - math.pi)
-        print(self.rotation)
-        if ((self.distance <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad)):
+        print(self.height, self.local_pos.z)
+        if ((self.distance <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2)):
             print("diller")
             self.sp.pose.position.x = float(self.coordinates[self.update][0])
             self.sp.pose.position.y = float(self.coordinates[self.update][1])

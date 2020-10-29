@@ -9,3 +9,7 @@ cd PiR-repo/catkin_ws
 source devel/setup.bash
 
 rosrun hole_detector offb_control.py
+
+
+
+Replace sdu_drone_mono_cam.sdf in eit_ws/src/eit_playground/models/sdu_drone_mono_cam with modified version to get the correct camera angle.
