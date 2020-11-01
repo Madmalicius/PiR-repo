@@ -4,52 +4,58 @@ import numpy as np
 import rospy
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image, NavSatFix
+from camera_controller import CameraController
+from std_srvs.srv import Trigger
 
 
 class HoleDetector():
 
     def __init__(self):
-        pass
+        
 
     def detect(self, img):
-        return False
 
 
 current_pos = None
-positions = []
-img_msgs = []
+proc_data = []
+
+cam = None
 
 # On new image, save image message and current gps position
 def image_callback(msg):
-    global img_msgs, positions
-    img_msgs.append(msg)
-    positions.append(current_pos)
+    global proc_data
+    if cam is None:
+        return
+    img = cam.capture()
+    proc_data.append((img, current_pos))
 
 def gps_callback(msg):
     current_pos = (msg.latitude, msg.longitude, msg.altitude)
 
 if __name__ == '__main__':
+    cam = CameraController()
     hd = HoleDetector()
-    bridge = CvBridge()
 
     rospy.init_node("holedetector_vision")
-    rospy.Subscriber("/camera/image_raw", Image, image_callback)
+    rospy.Service("/camera/take_img", Trigger, image_callback)
     rospy.Subscriber("/mavros/global_position/global", NavSatFix, gps_callback)
 
-    rate = rospy.Rate(5)
+    time.sleep(2)
+
+    rate = rospy.Rate(15)
 
     # Loop
     while(not rospy.is_shutdown()):
+        print("Waiting for image")
         # Wait for received image
-        while current_img_msg is None:
+        while len(proc_data) == 0:
             rate.sleep()
-        # Convert message to image
-        img = bridge.imgmsg_to_cv2(current_img_msg, "bgr8")
-        # Reset message variable
-        current_img_msg = None
+        print("Processing image")
+        img, pos = proc_data.pop(0)
+        proc_data
         # Run detection
         fault = hd.detect(img)
         # If fault, publish image and 
         if fault:
             print("Fault detected!")
-            # TODO Publish image with position
+            # TODO Save image with position
