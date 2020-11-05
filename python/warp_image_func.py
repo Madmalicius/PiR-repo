@@ -50,7 +50,7 @@ def warp_image(img, angle):
 
     trans = A2.dot(T.dot(rot_mat.dot(A1)))
 
-    result = cv2.warpPerspective(img, trans, (img.shape[1],img.shape[0]))
+    result = cv2.warpPerspective(img, trans, (w,h))
 
     ##Crop image
     h_lines = result.mean(axis = 1)
@@ -66,6 +66,6 @@ def warp_image(img, angle):
             max_y = i
             break
 
-    result_cropped = result[min_y:max_y+1, 0:img.shape[1]]
+    result_cropped = result[min_y:max_y+1, 0:w]
 
     return result_cropped
