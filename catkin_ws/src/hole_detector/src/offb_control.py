@@ -7,7 +7,6 @@ from geometry_msgs.msg import Point, PoseStamped, Quaternion
 # import all mavros messages and services
 from mavros_msgs.msg import *
 from mavros_msgs.srv import *
-from uncertainties import ufloat
 import csv
 import os
 import math
