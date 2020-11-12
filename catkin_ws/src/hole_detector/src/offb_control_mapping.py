@@ -4,17 +4,16 @@ import rospy
 
 # 3D point & Stamped Pose msgs
 from geometry_msgs.msg import Point, PoseStamped, Quaternion
-from geographic_msgs.msg import GeoPoseStamped, GeoPoint
-from mavros_msgs.msg import Altitude
 from sensor_msgs.msg import NavSatFix
+from geographic_msgs.msg import GeoPoint
 # import all mavros messages and services
 from mavros_msgs.msg import *
 from mavros_msgs.srv import *
+from uncertainties import ufloat
 import csv
 import os
 import math
 import numpy as np
-from geographiclib.geodesic import Geodesic
 
 # Flight modes class
 # Flight modes are activated using ROS services
@@ -93,20 +92,29 @@ class Controller:
         self.state = State()
         # Instantiate a setpoints message
         self.sp = PoseStamped()
-        self.setp = GeoPoseStamped()
+        # set the flag to use position setpoints and yaw angle
+        #self.sp.type_mask = int('010111111000', 2)
+        # LOCAL_NED
+        #self.sp.coordinate_frame = 1
+
+        # We will fly at a fixed altitude for now
+        # Altitude setpoint, [meters]
+        self.ALT_SP = 2.0
+        # update the setpoint message with the required altitude
+        self.sp.pose.position.z = self.ALT_SP
+        # Step size for position update
+        self.STEP_SIZE = 2.0
+		# Fence. We will assume a square fence for now
+        self.FENCE_LIMIT = 5.0
+
         # A Message for the current local position of the drone
         self.local_pos = Point(0.0, 0.0, 2.0)
         self.local_orient = Quaternion(0.0, 0.0, 0.0, 0.0)
         self.local_coord = GeoPoint(0.0, 0.0, 0.0)
-        # We will fly at a fixed altitude for now, set to 2 meters above ground
-        #Initial values found from /global_position/global topic
-        self.setp.pose.position.latitude = 47.3977418
-        self.setp.pose.position.longitude = 8.5455939
-        self.setp.pose.position.altitude = 490
         # initial values for setpoints
         self.sp.pose.position.x = 0.0
         self.sp.pose.position.y = 0.0
-        self.sp.pose.position.z = 2.0
+
         
         self.update = 0
         #Uncertainty for position control
@@ -116,22 +124,17 @@ class Controller:
 
         basePath = os.path.dirname(os.path.abspath(__file__))
         # open file in read mode
-        with open(basePath + '/geodetic_coordinates.csv', 'r') as read_obj:
+        with open(basePath + '/output_coordiantas.csv', 'r') as read_obj:
             # pass the file object to reader() to get the reader object
             csv_reader = csv.reader(read_obj)
             # Pass reader object to list() to get a list of lists
             self.coordinates = list(csv_reader)
             #print(coordinates)
         self.length=len(self.coordinates)
-        # speed of the drone is set using MPC_XY_CRUISE parameter in MAVLink
-        # using QGroundControl. By default it is 5 m/s.
-        
+
         #Set initial rotation
         self.sp.pose.orientation.x, self.sp.pose.orientation.y, self.sp.pose.orientation.z, self.sp.pose.orientation.w = self.euler_to_quaternion(0,0,math.radians(float(self.coordinates[self.update][2])))
-        self.setp.pose.orientation.x, self.setp.pose.orientation.y, self.setp.pose.orientation.z, self.setp.pose.orientation.w = self.euler_to_quaternion(0,0,math.radians(float(self.coordinates[self.update][2])))
-        # define the WGS84 ellipsoid
-        self.geod = Geodesic.WGS84
-
+	# Callbacks
     ## local position callback
     def posCb(self, msg):
         self.local_pos.x = msg.pose.position.x
@@ -141,22 +144,15 @@ class Controller:
         self.local_orient.y = msg.pose.orientation.y
         self.local_orient.z = msg.pose.orientation.z
         self.local_orient.w = msg.pose.orientation.w
-    ## global position callback
-    def globalCb(self, msg):
-        self.local_coord.latitude = msg.latitude
-        self.local_coord.longitude = msg.longitude
-
-    def altitudeCb(self, msg):
-        self.local_coord.altitude = msg.amsl
-    ## Drone orientation callback
-    def orientCb(self,msg):
-        self.local_orient.x = msg.pose.orientation.x
-        self.local_orient.y = msg.pose.orientation.y
-        self.local_orient.z = msg.pose.orientation.z
-        self.local_orient.w = msg.pose.orientation.w
     ## Drone State callback
     def stateCb(self, msg):
         self.state = msg
+    ## GPS callback
+    def globalCb(self, msg):
+        self.local_coord.latitude = msg.latitude
+        self.local_coord.longitude = msg.longitude
+    def altitudeCb(self, msg):
+        self.local_coord.altitude = msg.amsl
 
 
     ## Conversion functions
@@ -194,9 +190,11 @@ class Controller:
         yaw, pitch, roll = self.quaternion_to_euler(self.sp.pose.orientation.x, self.sp.pose.orientation.y, self.sp.pose.orientation.z, self.sp.pose.orientation.w)
         self.rotation = y - yaw
         self.rotation = abs((self.rotation + math.pi) % (math.pi*2) - math.pi)
-        
         #print(self.height, self.local_pos.z)
         if ((self.distance <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2)):
+            with open('geodetic_coordinates.csv', mode='a') as csvfile:
+                self.writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                self.writer.writerow([self.local_coord.latitude, self.local_coord.longitude, self.coordinates[self.update][2]])
             print("diller")
             self.sp.pose.position.x = float(self.coordinates[self.update][0])
             self.sp.pose.position.y = float(self.coordinates[self.update][1])
@@ -209,36 +207,13 @@ class Controller:
                 self.sp.pose.position.x = 0.0
                 self.sp.pose.position.y = 0.0
                 self.sp.pose.position.z = 2.0
-                if self.distance <= self.uncertain_dist:
+                if self.distance <= self.uncertain_dist :
                     self.sp.pose.position.x = 0.0
                     self.sp.pose.position.y = 0.0
                     self.sp.pose.position.z = 0.0
         else:
             pass
-    ## Update coordinate setpoint message
-    def updateSetp(self):
-        #Calculate rotational difference
-        yaw, pitch, roll = self.quaternion_to_euler(self.setp.pose.orientation.x, self.setp.pose.orientation.y, self.setp.pose.orientation.z, self.setp.pose.orientation.w)
-        y, p, r = self.quaternion_to_euler(self.local_orient.x, self.local_orient.y, self.local_orient.z, self.local_orient.w)
-        self.rotation = y - yaw
-        self.rotation = abs((self.rotation + math.pi) % (math.pi*2) - math.pi)
-        #Calculate distance to point
-        self.g = self.geod.Inverse(self.setp.pose.position.latitude, self.setp.pose.position.longitude, self.local_coord.latitude, self.local_coord.longitude)
-        self.height = abs(self.local_coord.altitude - self.setp.pose.position.altitude)
-        print(self.local_coord.altitude)
-        #print("The distance is {:.3f} m.".format(self.g['s12']), self.rotation, self.height)
-        
-        if ((self.g['s12'] <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2)):
-            #print(float(self.coordinates[self.update][0]))
-            #print(float(self.coordinates[self.update][1]))
-            print("globaldiller")
-            #print(self.g['s12'])
-            self.setp.pose.position.latitude = float(self.coordinates[self.update][0])
-            self.setp.pose.position.longitude = float(self.coordinates[self.update][1])
-            #self.setp.pose.position.altitude = self.local_coord.altitude
-            self.setp.pose.orientation.x, self.setp.pose.orientation.y, self.setp.pose.orientation.z, self.setp.pose.orientation.w = self.euler_to_quaternion(0,0,math.radians(float(self.coordinates[self.update][2])))
-            self.update+=1
-        
+            
 # Main function
 def main():
 
@@ -258,27 +233,26 @@ def main():
     rospy.Subscriber('mavros/state', State, cnt.stateCb)
 
     # Subscribe to drone's local position
-    rospy.Subscriber('mavros/local_position/pose', PoseStamped, cnt.orientCb)
-
-    #Subscribe to drones gps
-    rospy.Subscriber('/mavros/global_position/global', NavSatFix, cnt.globalCb)
-    rospy.Subscriber('/mavros/altitude', Altitude, cnt.altitudeCb)
+    rospy.Subscriber('mavros/local_position/pose', PoseStamped, cnt.posCb)
 
     # Setpoint publisher    
     sp_pub = rospy.Publisher('/mavros/setpoint_position/local', PoseStamped, queue_size=1)
-    # Setpoint publisher coordinates
-    setpoint_global_pub = rospy.Publisher('/mavros/setpoint_position/global', GeoPoseStamped, queue_size=1)
 
+    #Subscribe to gps for mapping
+    rospy.Subscriber('/mavros/global_position/global', NavSatFix, cnt.globalCb)
     # Make sure the drone is armed
     while not cnt.state.armed:
         modes.setArm()
         rate.sleep()
 
+    # set in takeoff mode and takeoff to default altitude (3 m)
+    # modes.setTakeoff()
+    # rate.sleep()
+
     # We need to send few setpoint messages, then activate OFFBOARD mode, to take effect
     k=0
     while k<10:
-        #sp_pub.publish(cnt.sp)
-        setpoint_global_pub.publish(cnt.setp)
+        sp_pub.publish(cnt.sp)
         rate.sleep()
         k = k + 1
 
@@ -287,10 +261,8 @@ def main():
 
     # ROS main loop
     while not rospy.is_shutdown():
-        
-        cnt.updateSetp()
-        #sp_pub.publish(cnt.sp)
-        setpoint_global_pub.publish(cnt.setp)
+        cnt.updateSp()
+        sp_pub.publish(cnt.sp)
         rate.sleep()
 
 if __name__ == '__main__':
