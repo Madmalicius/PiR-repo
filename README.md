@@ -1,7 +1,20 @@
 # PiR-repo
 Repository for Project in Robotics 
 
-## Run simulation environment
+## Run simulation environment - Quick Setup
+It is assumed that ROS and Gazebo are pre-installed.
+
+To setup the system, run the following bash script in the root folder of the repository:
+```CMD
+bash setup.sh
+```
+
+In case the EiT environment is already setup or the `setup.sh` has already been run once, the following script can be used to start the ros nodes:
+```CMD
+bash start.sh
+```
+
+## Run simulation environment - Walkthrough
 First ensure you have a working ROS and PX4 instalation by following the guide in 'Project in Robotics - appendix D' (PDF on blackboard)
 
 Second get the Expert-in-Teams(EIT) Playground world by following the guide in 'Project in Robotics - appendix G'
