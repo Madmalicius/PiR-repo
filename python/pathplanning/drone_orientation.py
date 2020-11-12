@@ -25,7 +25,7 @@ class Pathplanclass():
         #FIELD OF VIEW OF CAMERA IN METERS
         self.FIELD_OF_VIEW = 30
         #OFFSET OF DRONE PATH FROM FENCE
-        self.FENCE_OFFSET = 2
+        self.FENCE_OFFSET = 2.5
 
         
 
