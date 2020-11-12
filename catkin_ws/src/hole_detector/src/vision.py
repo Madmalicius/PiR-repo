@@ -4,9 +4,10 @@ import numpy as np
 import rospy
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image, NavSatFix
-from camera_controller import CameraController
+#from camera_controller import CameraController
 from std_srvs.srv import Trigger
 from std_msgs.msg import Bool
+import time
 
 
 class HoleDetector():
@@ -117,16 +118,18 @@ cam = None
 # On new image, save image message and current gps position
 def image_callback(msg):
     global proc_data
-    if cam is None:
-        return
-    img = cam.capture()
-    proc_data.append((img, current_pos))
+    print("taking image")
+    time.sleep(2)
+    proc_data.append((2, 1))
+    print("Image taken")
+
+    return [True, "Image taken"]
 
 def gps_callback(msg):
     current_pos = (msg.latitude, msg.longitude, msg.altitude)
 
 if __name__ == '__main__':
-    cam = CameraController()
+    #cam = CameraController()
     hd = HoleDetector()
 
     rospy.init_node("holedetector_vision")
@@ -145,14 +148,15 @@ if __name__ == '__main__':
         while len(proc_data) == 0 and (not rospy.is_shutdown()):
             rate.sleep()
         print("Processing image")
+        time.sleep(2)
         img, pos = proc_data.pop(0)
         
         # Run detection
-        fault = hd.detect(img)
+        #fault = hd.detect(img)
         # If fault, publish image and 
-        if fault:
-            print("Fault detected!")
-            # TODO Save image with position
+        #if fault:
+        #    print("Fault detected!")
+        #    # TODO Save image with position
 
         proc_done = Bool()
         proc_done.data = True
