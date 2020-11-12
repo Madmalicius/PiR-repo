@@ -9,4 +9,4 @@ gnome-terminal -- bash -c "roslaunch mavros px4.launch fcu_url:='udp://:14540@12
 
 gnome-terminal -- bash -c "source ~/eit_ws/devel/setup.bash && source ~/eit_ws/src/eit_playground/setup_gazebo.bash && cd ~/eit_ws/ && (catkin build || catkin_make) ; roslaunch --wait eit_playground posix.launch vehicle:=sdu_drone_mono_cam env:=hca_airport_fence_complex"
 
-gnome-terminal -- bash -c "cd ./catkin_ws && source devel/setup.bash && rosrun hole_detector offb_control_coordinates.py"
+gnome-terminal -- bash -c "cd ./catkin_ws && source devel/setup.bash && rosrun hole_detector offb_control.py"
