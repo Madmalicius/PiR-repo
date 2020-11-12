@@ -1,2 +1,2 @@
 - setup-file:
-    local-name: /home/ubuntu/PiR-repo/catkin_ws/devel/setup.sh
+    local-name: /home/mikkel/PiRProject/PiR-repo/catkin_ws/devel/setup.sh
