@@ -7,6 +7,8 @@ from geometry_msgs.msg import Point, PoseStamped, Quaternion
 # import all mavros messages and services
 from mavros_msgs.msg import *
 from mavros_msgs.srv import *
+from std_srvs.srv import Trigger
+from std_msgs.msg import Bool
 from uncertainties import ufloat
 import csv
 import os
@@ -120,6 +122,9 @@ class Controller:
         #2 degrees
         self.uncertain_rad = 0.035
 
+        # image proccesing done
+        self.proc_done = True
+
         basePath = os.path.dirname(os.path.abspath(__file__))
         # open file in read mode
         with open(basePath + '/output_coordiantas.csv', 'r') as read_obj:
@@ -173,6 +178,19 @@ class Controller:
 
         return [yaw, pitch, roll]
 
+    ## Starts caputuring image and returns when done
+    def capture_image(self):
+        rospy.wait_for_service('/camera/take_img')
+        try:
+            take_photo = rospy.ServiceProxy('/camera/take_img', Trigger)
+            take_photo()
+        except rospy.ServiceException as e:
+            print("Service call failed: %s"%e)
+        return
+
+    def proc_done_Cb(self, msg):
+        self.proc_done = True
+
     ## Update setpoint message
     def updateSp(self):
         #Calculate distance to point
@@ -184,7 +202,11 @@ class Controller:
         self.rotation = y - yaw
         self.rotation = abs((self.rotation + math.pi) % (math.pi*2) - math.pi)
         print(self.height, self.local_pos.z)
-        if ((self.distance <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2)):
+        if ((self.distance <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2) and self.proc_done ):
+
+            self.proc_done = False
+            self.capture_image()
+                    
             print("diller")
             self.sp.pose.position.x = float(self.coordinates[self.update][0])
             self.sp.pose.position.y = float(self.coordinates[self.update][1])
@@ -228,6 +250,9 @@ def main():
 
     # Setpoint publisher    
     sp_pub = rospy.Publisher('/mavros/setpoint_position/local', PoseStamped, queue_size=1)
+
+    # Subscribe to image prossing done flag
+    rospy.Subscriber("/camera/proc_done", Bool, cnt.proc_done_Cb)
 
 
     # Make sure the drone is armed
