@@ -1,4 +1,21 @@
 #!/bin/bash
+sudo apt install ros-melodic-desktop-full astyle build-essential ccache clang clang-tidy cmake cppcheck doxygen file g++ gcc gdb git lcov make ninja-build python3 python3-dev python3-pip python3-setuptools python3-wheel rsync shellcheck unzip xsltproc zip libeigen3-dev libopencv-dev libroscpp-dev protobuf-compiler python-pip python3-pip ninja-build gstreamer1.0-plugins-bad gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly libgstreamer-plugins-base1.0-dev libgstrtspserver-1.0-dev xvfb python-catkin-tools -y
+pip install --user argparse cerberus empy jinja2 numpy packaging pandas psutil pygments pyros-genmsg pyserial pyulog pyyaml setuptools six toml wheel rosdep
+pip3 install --user --upgrade empy jinja2 numpy packaging pyros-genmsg toml pyyaml pymavlink
+
+if [ -d ~/Firmware]; then
+    echo "PX4 Firmware is installed"
+else
+    pushd ~
+        git clone https://github.com/PX4/Firmware.git
+    popd
+    pushd ~/Firmware
+        git submodule update --init --recursive
+    popd
+    pushd ~/Firmware
+        DONT_RUN=1 make px4_sitl_default gazebo
+    popd
+fi
 
 sudo apt install ros-melodic-mavros ros-melodic-mavros-extras -y
 
