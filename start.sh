@@ -6,4 +6,4 @@ export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/$USER/Firmware/Tools/sitl_gazebo
 
 gnome-terminal --window -- bash -c "roslaunch mavros px4.launch fcu_url:='udp://:14540@127.0.0.1:14557'"
 
-gnome-terminal --window -- bash -c "source ~/eit_ws/devel/setup.bash && source ~/eit_ws/src/eit_playground/setup_gazebo.bash && cd ~/eit_ws/ && (catkin build || catkin_make) ; roslaunch eit_playground posix.launch vehicle:=sdu_drone_mono_cam env:=hca_airport_fence_complex"
+gnome-terminal --window --active -- bash -c "source ~/eit_ws/devel/setup.bash && source ~/eit_ws/src/eit_playground/setup_gazebo.bash && cd ~/eit_ws/ && (catkin build || catkin_make) ; roslaunch --wait eit_playground posix.launch vehicle:=sdu_drone_mono_cam env:=hca_airport_fence_complex"
