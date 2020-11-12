@@ -4,7 +4,7 @@ Repository for Project in Robotics
 ## Run simulation environment
 First ensure you have a working ROS and PX4 instalation by following the guide in 'Project in Robotics - appendix D' (PDF on blackboard)
 
-Secound get the Expert-in-Teams(EIT) Playground world by following the guide in 'Project in Robotics - appendix G'
+Second get the Expert-in-Teams(EIT) Playground world by following the guide in 'Project in Robotics - appendix G'
 
 When your PX4 playground works with the EIT playground your are ready to run the simulation by doing the following: 
 
