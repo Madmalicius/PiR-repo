@@ -155,5 +155,5 @@ if __name__ == '__main__':
             # TODO Save image with position
 
         proc_done = Bool()
-        proc_done.data = "True"
-        drone_pub.publish(proc_done)
+        proc_done.data = True
+        done_pub.publish(proc_done)
