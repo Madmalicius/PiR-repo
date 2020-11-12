@@ -142,7 +142,7 @@ if __name__ == '__main__':
     while(not rospy.is_shutdown()):
         print("Waiting for image")
         # Wait for received image
-        while len(proc_data) == 0 and not rospy.is_shutdown():
+        while len(proc_data) == 0 and (not rospy.is_shutdown()):
             rate.sleep()
         print("Processing image")
         img, pos = proc_data.pop(0)
