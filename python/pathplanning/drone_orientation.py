@@ -16,18 +16,18 @@ class Pathplanclass():
     def __init__(self):
         
         #plotting data
-        self.plotData =  False
+        self.plotData =  True
 
-        self.plan_file = "/fence_location.plan"
-        self.csv_filename = 'drone_path.csv'
+        self.plan_file = "/real_mission.plan"
+        self.csv_filename = '/drone_path.csv'
 
         self.uc = utmconv()
         #FIELD OF VIEW OF CAMERA IN METERS
-        self.FIELD_OF_VIEW = 30
+        self.FIELD_OF_VIEW = 5
         #OFFSET OF DRONE PATH FROM FENCE
         self.FENCE_OFFSET = 2.5
 
-        
+        self.basePath = os.path.dirname(os.path.abspath(__file__))
 
         ##### RUNNING THE SCIPTS #####
         self.run_main(self.plan_file)
@@ -35,14 +35,13 @@ class Pathplanclass():
 
 
     def get_fence_position(self,filename):
-        basePath = os.path.dirname(os.path.abspath(__file__))
-        file_read = pd.read_json(basePath + filename, orient='columns')
+        file_read = pd.read_json(self.basePath + filename, orient='columns')
         fileLength = len(file_read['mission']['items'])
 
         path_fence = []
         uc = utmconv() 
 
-        for i in range(2,fileLength): # Starts from item[1] because item[0] would be null
+        for i in range(1,fileLength): # Starts from item[1] because item[0] would be null
                 lon = file_read['mission']['items'][i]['params'][4]
                 lat = file_read['mission']['items'][i]['params'][5]
                 alt = file_read['mission']['items'][i]['params'][6]
@@ -50,7 +49,10 @@ class Pathplanclass():
                 if(alt == 0):
                     break
 
+                print(lon, lat)
                 hemisphere, zone, letter, e, n = uc.geodetic_to_utm (lat,lon)
+
+                
 
                 path_fence.append([e,n])
 
@@ -141,7 +143,7 @@ class Pathplanclass():
         return data
 
     def write_csv(self,data,fileName):
-        with open(fileName,'w') as file:
+        with open( self.basePath + fileName,'w') as file:
             writeData = csv.writer(file)#,quoting=csv.QUOTE_ALL)
 
             for x in range(len(data)):
@@ -150,6 +152,8 @@ class Pathplanclass():
     def fix_start_point(self, path_fence, flight_path_x, flight_path_y):
 
         node = path_fence[0]
+        print(path_fence[0])
+        print(flight_path_x)
         nodes = zip(flight_path_x,flight_path_y)
 
         shift = cdist([node], nodes).argmin()
@@ -162,9 +166,11 @@ class Pathplanclass():
 
     def run_main(self,plan_file):
         hemisphere, zone, letter, path_fence = self.get_fence_position(plan_file) 
+        print(path_fence[0])
         flight_path_x, flight_path_y = self.calculate_flight_path(path_fence)
         photo_pos_x, photo_pos_y = self.calculate_photo_positions(flight_path_x, flight_path_y)
         photo_pos_x, photo_pos_y = self.fix_start_point(path_fence, photo_pos_x, photo_pos_y)
+        print(photo_pos_x)
         photo_orientation = self.calculate_photo_orientation(photo_pos_x, photo_pos_y) # roation around z-axis
 
         lat,lon = self.convert_utm_to_lon_lat(hemisphere,zone,photo_pos_x,photo_pos_y) 
@@ -195,3 +201,4 @@ if __name__ == "__main__":
         Pathplanclass()
     #except rospy.ROSInterruptException as e:
     #    print(e)
+

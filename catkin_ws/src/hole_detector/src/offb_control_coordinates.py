@@ -100,9 +100,6 @@ class Controller:
         self.local_coord = GeoPoint(0.0, 0.0, 0.0)
         # We will fly at a fixed altitude for now, set to 2 meters above ground
         #Initial values found from /global_position/global topic
-        self.setp.pose.position.latitude = 47.3977418
-        self.setp.pose.position.longitude = 8.5455939
-        self.setp.pose.position.altitude = 490
         # initial values for setpoints
         self.sp.pose.position.x = 0.0
         self.sp.pose.position.y = 0.0
@@ -157,7 +154,13 @@ class Controller:
     ## Drone State callback
     def stateCb(self, msg):
         self.state = msg
-
+    ## Initialize flight height to ground level +2m
+    def initCb(self):
+        msg = rospy.wait_for_message('/mavros/altitude', Altitude)
+        self.setp.pose.position.altitude = msg.amsl +2
+        pos = rospy.wait_for_message('/mavros/global_position/global', NavSatFix)
+        self.setp.pose.position.latitude = pos.latitude
+        self.setp.pose.position.longitude = pos.longitude
 
     ## Conversion functions
     def euler_to_quaternion(self, roll, pitch, yaw):
@@ -225,7 +228,7 @@ class Controller:
         #Calculate distance to point
         self.g = self.geod.Inverse(self.setp.pose.position.latitude, self.setp.pose.position.longitude, self.local_coord.latitude, self.local_coord.longitude)
         self.height = abs(self.local_coord.altitude - self.setp.pose.position.altitude)
-        print(self.local_coord.altitude)
+        #print(self.local_coord.altitude)
         #print("The distance is {:.3f} m.".format(self.g['s12']), self.rotation, self.height)
         
         if ((self.g['s12'] <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2)):
@@ -268,7 +271,6 @@ def main():
     sp_pub = rospy.Publisher('/mavros/setpoint_position/local', PoseStamped, queue_size=1)
     # Setpoint publisher coordinates
     setpoint_global_pub = rospy.Publisher('/mavros/setpoint_position/global', GeoPoseStamped, queue_size=1)
-
     # Make sure the drone is armed
     while not cnt.state.armed:
         modes.setArm()
@@ -284,10 +286,9 @@ def main():
 
     # activate OFFBOARD mode
     modes.setOffboardMode()
-
+    cnt.initCb()
     # ROS main loop
     while not rospy.is_shutdown():
-        
         cnt.updateSetp()
         #sp_pub.publish(cnt.sp)
         setpoint_global_pub.publish(cnt.setp)
