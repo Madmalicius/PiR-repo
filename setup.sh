@@ -3,8 +3,8 @@
 sudo apt install ros-melodic-mavros ros-melodic-mavros-extras -y
 
 pushd ./catkin_ws
-    catkin build
     chmod +x ./src/hole_detector/src/offb_control.py
+    catkin build || catkin_make
 popd
 
 pwd
