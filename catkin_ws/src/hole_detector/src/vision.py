@@ -121,6 +121,7 @@ def image_callback(msg):
         return
     img = cam.capture()
     proc_data.append((img, current_pos))
+    return [True, "Image taken"]
 
 def gps_callback(msg):
     current_pos = (msg.latitude, msg.longitude, msg.altitude)
