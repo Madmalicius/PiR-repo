@@ -6,12 +6,13 @@ from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image, NavSatFix
 from camera_controller import CameraController
 from std_srvs.srv import Trigger
+from std_msgs.msg import Bool
 
 
 class HoleDetector():
 
     def __init__(self):
-        
+        pass
 
     def detect(self, img):
         hsv = cv2.cvtColor(self.img, cv2.COLOR_BGR2HSV)
@@ -131,6 +132,7 @@ if __name__ == '__main__':
     rospy.init_node("holedetector_vision")
     rospy.Service("/camera/take_img", Trigger, image_callback)
     rospy.Subscriber("/mavros/global_position/global", NavSatFix, gps_callback)
+    done_pub = rospy.Publisher("/camera/proc_done", Bool)
 
     time.sleep(2)
 
@@ -144,10 +146,14 @@ if __name__ == '__main__':
             rate.sleep()
         print("Processing image")
         img, pos = proc_data.pop(0)
-        proc_data
+        
         # Run detection
         fault = hd.detect(img)
         # If fault, publish image and 
         if fault:
             print("Fault detected!")
             # TODO Save image with position
+
+        proc_done = Bool()
+        proc_done.data = "True"
+        drone_pub.publish(proc_done)
