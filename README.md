@@ -4,7 +4,7 @@ Repository for Project in Robotics
 ## Run simulation environment
 First ensure you have a working ROS and PX4 instalation by following the guide in 'Project in Robotics - appendix D' (PDF on blackboard)
 
-Secound get the Expert-in-Teams(EIT) Playground world by following the guide in 'Project in Robotics - appendix G'
+Second get the Expert-in-Teams(EIT) Playground world by following the guide in 'Project in Robotics - appendix G'
 
 When your PX4 playground works with the EIT playground your are ready to run the simulation by doing the following: 
 
@@ -23,13 +23,13 @@ roslaunch mavros px4.launch fcu_url:="udp://:14540@127.0.0.1:14557"
 ### Step 4
 Launch the gazebo simulation
 ```cmd
+beit-ws
 roslaunch eit_playground posix.launch vehicle:=sdu_drone_mono_cam env:=hca_airport_fence_complex
 ```
 
 ### Step 5
 Start the simulation by running our control program
 ```cmd
-beit-ws
 cd PiR-repo/catkin_ws
 source devel/setup.bash
 rosrun hole_detector offb_control.py
