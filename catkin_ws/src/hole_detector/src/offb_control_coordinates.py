@@ -115,9 +115,9 @@ class Controller:
         #########################################
 
         #Uncertainty for position control
-        self.uncertain_dist = 0.1
+        self.uncertain_dist = 0.2
         #2 degrees
-        self.uncertain_rad = 0.035
+        self.uncertain_rad = 0.39
 
         # image proccesing done
         self.proc_done = True
