@@ -83,4 +83,8 @@ else
     popd
 fi
 
+ln -s /home/$USER/eit_ws/src/eit_playground/init.d-posix/* /home/$USER/Firmware/ROMFS/px4fmu_common/init.d-posix/
+ln -s /home/$USER/eit_ws/src/eit_playground/mixers/* /home/$USER/Firmware/ROMFS/px4fmu_common/mixers/
+
+
 bash start.sh
