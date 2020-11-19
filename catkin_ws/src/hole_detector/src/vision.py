@@ -6,6 +6,7 @@ from sensor_msgs.msg import Image, NavSatFix
 from camera_controller import CameraController
 from std_srvs.srv import Trigger
 from std_msgs.msg import Bool
+import time
 
 
 class HoleDetector():
