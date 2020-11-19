@@ -356,9 +356,11 @@ def main():
 
     # activate OFFBOARD mode
     modes.setOffboardMode()
+    # initlocalCb for local coordinates, initglobalCb for gps coordinates
     cnt.initlocalCb()
     # ROS main loop
     while not rospy.is_shutdown():
+        # cnt.updateSp for local coordinates, cnt.updateSetp for gps coordinates
         cnt.updateSp()
         #sp_pub.publish(cnt.sp)
         setpoint_global_pub.publish(cnt.setp)
