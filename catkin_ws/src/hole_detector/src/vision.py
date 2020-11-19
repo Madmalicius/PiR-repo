@@ -116,7 +116,7 @@ proc_data = []
 
 cam = None
 
-imgDirPath = "/home/fence_img"
+imgDirPath = "~/fence_imgs"
 faultCount = 0
 
 # On new image, save image message and current gps position
