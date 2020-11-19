@@ -281,14 +281,14 @@ class Controller:
         #Calculate distance to point
         self.g = self.geod.Inverse(self.setp.pose.position.latitude, self.setp.pose.position.longitude, self.local_coord.latitude, self.local_coord.longitude)
         self.height = abs(self.local_coord.altitude - self.setp.pose.position.altitude)
-        print("The distance is {:.3f} m.".format(self.g['s12']), self.rotation, self.height)
+        print("The distance is: {:.3f} m.".format(self.g['s12']), "The rotational error: {:.3f} degrees.".format(self.rotation), "The altitude error: {:.3f} m.".format(self.height))
         #Update the setpoint
         if ((self.g['s12'] <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2) and self.proc_done):
             if(not self.simulation):
                 self.proc_done = False
                 self.capture_image()
-            
-            print("globaldiller")
+            for line in range(10):
+                print("globaldiller")
             self.setp.pose.position.latitude = float(self.coordinates[self.update][0])
             self.setp.pose.position.longitude = float(self.coordinates[self.update][1])
             self.setp.pose.orientation.x, self.setp.pose.orientation.y, self.setp.pose.orientation.z, self.setp.pose.orientation.w = self.euler_to_quaternion(0,0,math.radians(float(self.coordinates[self.update][2])))
