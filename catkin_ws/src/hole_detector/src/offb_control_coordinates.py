@@ -115,9 +115,9 @@ class Controller:
         #########################################
 
         #Uncertainty for position control
-        self.uncertain_dist = 0.2
+        self.uncertain_dist = 0.1
         #2 degrees
-        self.uncertain_rad = 0.39
+        self.uncertain_rad = 0.035
         #Set the altitude
         self.altitude = 2
         # define the WGS84 ellipsoid
@@ -183,12 +183,18 @@ class Controller:
     def stateCb(self, msg):
         self.state = msg
     ## Initialize flight height to ground level +2m
-    def initCb(self):
+    def initglobalCb(self):
         msg = rospy.wait_for_message('/mavros/altitude', Altitude)
         self.setp.pose.position.altitude = msg.amsl + self.altitude
         pos = rospy.wait_for_message('/mavros/global_position/global', NavSatFix)
         self.setp.pose.position.latitude = pos.latitude
         self.setp.pose.position.longitude = pos.longitude
+    def initlocalCb(self):
+        msg = rospy.wait_for_message('mavros/local_position/pose', PoseStamped)
+        self.local_pos.x = msg.pose.position.x
+        self.local_pos.y = msg.pose.position.y
+        self.local_pos.z = msg.pose.position.z + self.altitude
+
         #########################################
         #                                       #
     #####           Conversion functions        #####
@@ -204,7 +210,7 @@ class Controller:
 
         return [qx, qy, qz, qw]
 
-    def quaternion_to_euler(self, x, y, z, w):
+    def quaternions_to_euler(self, x, y, z, w):
 
         t0 = +2.0 * (w * x + y * z)
         t1 = +1.0 - 2.0 * (x * x + y * y)
@@ -350,10 +356,10 @@ def main():
 
     # activate OFFBOARD mode
     modes.setOffboardMode()
-    cnt.initCb()
+    cnt.initlocalCb()
     # ROS main loop
     while not rospy.is_shutdown():
-        cnt.updateSetp()
+        cnt.updateSp()
         #sp_pub.publish(cnt.sp)
         setpoint_global_pub.publish(cnt.setp)
         rate.sleep()
