@@ -155,7 +155,7 @@ if __name__ == '__main__':
         cnt += 1
         
         # Run detection
-        fault = hd.detect(img)
+        fault = False#hd.detect(img)
         # If fault, publish image and 
         if fault:
             print("Fault detected!")
