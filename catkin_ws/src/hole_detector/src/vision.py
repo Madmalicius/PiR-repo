@@ -7,6 +7,8 @@ from sensor_msgs.msg import Image, NavSatFix
 from camera_controller import CameraController
 from std_srvs.srv import Trigger
 from std_msgs.msg import Bool
+from GPSPhoto import gpsphoto
+from PIL import Image
 
 
 class HoleDetector():
@@ -114,6 +116,9 @@ proc_data = []
 
 cam = None
 
+imgDirPath = "/home/fence_img"
+faultCount = 0
+
 # On new image, save image message and current gps position
 def image_callback(msg):
     global proc_data
@@ -125,6 +130,17 @@ def image_callback(msg):
 
 def gps_callback(msg):
     current_pos = (msg.latitude, msg.longitude, msg.altitude)
+
+def ImgGPSCombiner(pos,imgPath):
+    imgPathTagged = imgPath + "Tag.jpg"
+
+    photo = gpsphoto.GPSPhoto(imgPath)
+
+    info = gpsphoto.GPSInfo((pos[0], pos[1]))
+
+    # Modify GPS Data
+    photo.modGPSData(info, imgPathTagged)
+    os.remove(imgPath)
 
 if __name__ == '__main__':
     cam = CameraController()
@@ -153,7 +169,10 @@ if __name__ == '__main__':
         # If fault, publish image and 
         if fault:
             print("Fault detected!")
-            # TODO Save image with position
+            imgPath = imgDirPath + "/Err"+str(faultCount)
+            cv2.imwrite(imgPath+".jpg",img)
+            ImgGPSCombiner(pos,imgPath)
+            faultCount += 1
 
         proc_done = Bool()
         proc_done.data = True
