@@ -2,7 +2,6 @@
 import cv2
 import numpy as np
 import rospy
-from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image, NavSatFix
 from camera_controller import CameraController
 from std_srvs.srv import Trigger
