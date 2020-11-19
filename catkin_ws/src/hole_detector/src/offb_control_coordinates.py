@@ -106,12 +106,18 @@ class Controller:
         self.sp.pose.position.x = 0.0
         self.sp.pose.position.y = 0.0
         self.sp.pose.position.z = 2.0
-        
+        #Used to set the initial position of the gps
         self.update = 0
+        #########################################
+        #                                       #
+    #####   Set variables for the controller    #####
+        #                                       #
+        #########################################
+
         #Uncertainty for position control
-        self.uncertain_dist = 0.1
+        self.uncertain_dist = 0.2
         #2 degrees
-        self.uncertain_rad = 0.035
+        self.uncertain_rad = 0.39
 
         # image proccesing done
         self.proc_done = True
@@ -168,7 +174,7 @@ class Controller:
     ## Initialize flight height to ground level +2m
     def initCb(self):
         msg = rospy.wait_for_message('/mavros/altitude', Altitude)
-        self.setp.pose.position.altitude = msg.amsl +2
+        self.setp.pose.position.altitude = msg.amsl +1.5
         pos = rospy.wait_for_message('/mavros/global_position/global', NavSatFix)
         self.setp.pose.position.latitude = pos.latitude
         self.setp.pose.position.longitude = pos.longitude
@@ -225,7 +231,7 @@ class Controller:
         #print(self.height, self.local_pos.z)
         if ((self.distance <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2) and self.proc_done):
             
-            if(self.simulation):
+            if(not self.simulation):
                 self.proc_done = False
                 self.capture_image()
             

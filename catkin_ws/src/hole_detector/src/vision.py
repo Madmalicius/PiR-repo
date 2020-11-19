@@ -7,12 +7,14 @@ from sensor_msgs.msg import Image, NavSatFix
 from camera_controller import CameraController
 from std_srvs.srv import Trigger
 from std_msgs.msg import Bool
+from GPSPhoto import gpsphoto
+from PIL import Image
 
 
 class HoleDetector():
 
     def __init__(self):
-        pass
+        self.cam_ctrl = CameraController()
 
     def detect(self, img):
         hsv = cv2.cvtColor(self.img, cv2.COLOR_BGR2HSV)
@@ -114,17 +116,33 @@ proc_data = []
 
 cam = None
 
+imgDirPath = "~/fence_imgs"
+faultCount = 0
+
 # On new image, save image message and current gps position
 def image_callback(msg):
-    global proc_data
-    if cam is None:
-        return
+    global proc_data, cam
+    print("taking image")
     img = cam.capture()
     proc_data.append((img, current_pos))
+    print("Image taken")
+
     return [True, "Image taken"]
 
 def gps_callback(msg):
+    global current_pos
     current_pos = (msg.latitude, msg.longitude, msg.altitude)
+
+def ImgGPSCombiner(pos,imgPath):
+    imgPathTagged = imgPath + "Tag.jpg"
+
+    photo = gpsphoto.GPSPhoto(imgPath)
+
+    info = gpsphoto.GPSInfo((pos[0], pos[1]))
+
+    # Modify GPS Data
+    photo.modGPSData(info, imgPathTagged)
+    os.remove(imgPath)
 
 if __name__ == '__main__':
     cam = CameraController()
@@ -138,6 +156,7 @@ if __name__ == '__main__':
     time.sleep(2)
 
     rate = rospy.Rate(15)
+    cnt = 0
 
     # Loop
     while(not rospy.is_shutdown()):
@@ -147,13 +166,19 @@ if __name__ == '__main__':
             rate.sleep()
         print("Processing image")
         img, pos = proc_data.pop(0)
+
+        cv2.imwrite("~/fence_imgs/img_" + str(cnt) + ".jpg")
+        cnt += 1
         
         # Run detection
-        fault = hd.detect(img)
+        fault = False#hd.detect(img)
         # If fault, publish image and 
         if fault:
             print("Fault detected!")
-            # TODO Save image with position
+            imgPath = imgDirPath + "/Err"+str(faultCount)
+            cv2.imwrite(imgPath+".jpg",img)
+            ImgGPSCombiner(pos,imgPath)
+            faultCount += 1
 
         proc_done = Bool()
         proc_done.data = True
