@@ -120,7 +120,8 @@ class Controller:
         self.uncertain_rad = 0.17
         #Altitude in meters to fly
         self.altitude = 2
-
+        # define the WGS84 ellipsoid
+        self.geod = Geodesic.WGS84
         # image proccesing done
         self.proc_done = True
 
@@ -129,7 +130,11 @@ class Controller:
         self.simulation = False
         ### ---------------------------------- ###
 
-
+        #########################################
+        #                                       #
+    #####       Load path file (csv format)     #####
+        #                                       #
+        #########################################
         basePath = os.path.dirname(os.path.abspath(__file__))
         # open file in read mode
         with open(basePath + '/geodetic_coordinates.csv', 'r') as read_obj:
@@ -145,9 +150,11 @@ class Controller:
         #Set initial rotation
         self.sp.pose.orientation.x, self.sp.pose.orientation.y, self.sp.pose.orientation.z, self.sp.pose.orientation.w = self.euler_to_quaternion(0,0,math.radians(float(self.coordinates[self.update][2])))
         self.setp.pose.orientation.x, self.setp.pose.orientation.y, self.setp.pose.orientation.z, self.setp.pose.orientation.w = self.euler_to_quaternion(0,0,math.radians(float(self.coordinates[self.update][2])))
-        # define the WGS84 ellipsoid
-        self.geod = Geodesic.WGS84
-
+        #########################################
+        #                                       #
+    #####           Callback functions          #####
+        #                                       #
+        #########################################
     ## local position callback
     def posCb(self, msg):
         self.local_pos.x = msg.pose.position.x
@@ -180,8 +187,12 @@ class Controller:
         pos = rospy.wait_for_message('/mavros/global_position/global', NavSatFix)
         self.setp.pose.position.latitude = pos.latitude
         self.setp.pose.position.longitude = pos.longitude
+        #########################################
+        #                                       #
+    #####         Conversion functions          #####
+        #                                       #
+        #########################################
 
-    ## Conversion functions
     def euler_to_quaternion(self, roll, pitch, yaw):
 
         qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
@@ -219,7 +230,12 @@ class Controller:
     def proc_done_Cb(self, msg):
         self.proc_done = True
 
-    ## Update setpoint message
+        #########################################
+        #                                       #
+    #####       Update the setpoint function    #####
+        #                                       #
+        #########################################
+    ## Update local setpoint message
     def updateSp(self):
         #Calculate distance to point
         self.distance = math.sqrt((self.local_pos.x - self.sp.pose.position.x)** 2 + (self.local_pos.y - self.sp.pose.position.y)** 2)
@@ -265,20 +281,24 @@ class Controller:
         #Calculate distance to point
         self.g = self.geod.Inverse(self.setp.pose.position.latitude, self.setp.pose.position.longitude, self.local_coord.latitude, self.local_coord.longitude)
         self.height = abs(self.local_coord.altitude - self.setp.pose.position.altitude)
-        #print(self.local_coord.altitude)
         print("The distance is {:.3f} m.".format(self.g['s12']), self.rotation, self.height)
-        
-        if ((self.g['s12'] <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2)):
-            #print(float(self.coordinates[self.update][0]))
-            #print(float(self.coordinates[self.update][1]))
+        #Update the setpoint
+        if ((self.g['s12'] <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2) and self.proc_done):
+            if(not self.simulation):
+                self.proc_done = False
+                self.capture_image()
+            
             print("globaldiller")
-            #print(self.g['s12'])
             self.setp.pose.position.latitude = float(self.coordinates[self.update][0])
             self.setp.pose.position.longitude = float(self.coordinates[self.update][1])
-            #self.setp.pose.position.altitude = self.local_coord.altitude
             self.setp.pose.orientation.x, self.setp.pose.orientation.y, self.setp.pose.orientation.z, self.setp.pose.orientation.w = self.euler_to_quaternion(0,0,math.radians(float(self.coordinates[self.update][2])))
             self.update+=1
-        
+
+        #########################################
+        #                                       #
+    #####               Main loop               #####
+        #                                       #
+        #########################################        
 # Main function
 def main():
 
@@ -301,6 +321,7 @@ def main():
     rospy.Subscriber('mavros/local_position/pose', PoseStamped, cnt.orientCb)
 
     #Subscribe to drones gps
+    #Use altitude topic due to global_position/global having incorrect altitude offset
     rospy.Subscriber('/mavros/global_position/global', NavSatFix, cnt.globalCb)
     rospy.Subscriber('/mavros/altitude', Altitude, cnt.altitudeCb)
 
