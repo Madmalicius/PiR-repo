@@ -117,7 +117,9 @@ class Controller:
         #Uncertainty for position control
         self.uncertain_dist = 0.2
         #2 degrees
-        self.uncertain_rad = 0.39
+        self.uncertain_rad = 0.17
+        #Altitude in meters to fly
+        self.altitude = 2
 
         # image proccesing done
         self.proc_done = True
@@ -174,7 +176,7 @@ class Controller:
     ## Initialize flight height to ground level +2m
     def initCb(self):
         msg = rospy.wait_for_message('/mavros/altitude', Altitude)
-        self.setp.pose.position.altitude = msg.amsl +1.5
+        self.setp.pose.position.altitude = msg.amsl +self.altitude
         pos = rospy.wait_for_message('/mavros/global_position/global', NavSatFix)
         self.setp.pose.position.latitude = pos.latitude
         self.setp.pose.position.longitude = pos.longitude
@@ -264,7 +266,7 @@ class Controller:
         self.g = self.geod.Inverse(self.setp.pose.position.latitude, self.setp.pose.position.longitude, self.local_coord.latitude, self.local_coord.longitude)
         self.height = abs(self.local_coord.altitude - self.setp.pose.position.altitude)
         #print(self.local_coord.altitude)
-        #print("The distance is {:.3f} m.".format(self.g['s12']), self.rotation, self.height)
+        print("The distance is {:.3f} m.".format(self.g['s12']), self.rotation, self.height)
         
         if ((self.g['s12'] <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2)):
             #print(float(self.coordinates[self.update][0]))
