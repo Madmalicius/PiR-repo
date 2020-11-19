@@ -106,8 +106,14 @@ class Controller:
         self.sp.pose.position.x = 0.0
         self.sp.pose.position.y = 0.0
         self.sp.pose.position.z = 2.0
-        
+        #Used to set the initial position of the gps
         self.update = 0
+        #########################################
+        #                                       #
+    #####   Set variables for the controller    #####
+        #                                       #
+        #########################################
+
         #Uncertainty for position control
         self.uncertain_dist = 0.1
         #2 degrees
