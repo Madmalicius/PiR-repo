@@ -115,18 +115,28 @@ class Controller:
         #########################################
 
         #Uncertainty for position control
-        self.uncertain_dist = 0.2
+        self.uncertain_dist = 0.1
         #2 degrees
-        self.uncertain_rad = 0.39
-
+        self.uncertain_rad = 0.035
+        #Set the altitude
+        self.altitude = 2
+        # define the WGS84 ellipsoid
+        self.geod = Geodesic.WGS84
         # image proccesing done
         self.proc_done = True
 
-
+#################################################################################################################################################
         ### ------------SIMULATION------------ ###
         self.simulation = False
         ### ---------------------------------- ###
-
+        global localcoordinates
+        localcoordinates = True
+        ### ---------------------------------- ###
+        #########################################
+        #                                       #
+    #####       Load path file (csv type)       #####
+        #                                       #
+        #########################################
 
         basePath = os.path.dirname(os.path.abspath(__file__))
         # open file in read mode
@@ -143,8 +153,11 @@ class Controller:
         #Set initial rotation
         self.sp.pose.orientation.x, self.sp.pose.orientation.y, self.sp.pose.orientation.z, self.sp.pose.orientation.w = self.euler_to_quaternion(0,0,math.radians(float(self.coordinates[self.update][2])))
         self.setp.pose.orientation.x, self.setp.pose.orientation.y, self.setp.pose.orientation.z, self.setp.pose.orientation.w = self.euler_to_quaternion(0,0,math.radians(float(self.coordinates[self.update][2])))
-        # define the WGS84 ellipsoid
-        self.geod = Geodesic.WGS84
+        #########################################
+        #                                       #
+    #####           Callback functions          #####
+        #                                       #
+        #########################################
 
     ## local position callback
     def posCb(self, msg):
@@ -172,14 +185,24 @@ class Controller:
     def stateCb(self, msg):
         self.state = msg
     ## Initialize flight height to ground level +2m
-    def initCb(self):
+    def initglobalCb(self):
         msg = rospy.wait_for_message('/mavros/altitude', Altitude)
-        self.setp.pose.position.altitude = msg.amsl +1.5
+        self.setp.pose.position.altitude = msg.amsl + self.altitude
         pos = rospy.wait_for_message('/mavros/global_position/global', NavSatFix)
         self.setp.pose.position.latitude = pos.latitude
         self.setp.pose.position.longitude = pos.longitude
+    def initlocalCb(self):
+        msg = rospy.wait_for_message('mavros/local_position/pose', PoseStamped)
+        self.local_pos.x = msg.pose.position.x
+        self.local_pos.y = msg.pose.position.y
+        self.local_pos.z = msg.pose.position.z + self.altitude
 
-    ## Conversion functions
+        #########################################
+        #                                       #
+    #####           Conversion functions        #####
+        #                                       #
+        #########################################
+
     def euler_to_quaternion(self, roll, pitch, yaw):
 
         qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
@@ -189,7 +212,7 @@ class Controller:
 
         return [qx, qy, qz, qw]
 
-    def quaternion_to_euler(self, x, y, z, w):
+    def quaternions_to_euler(self, x, y, z, w):
 
         t0 = +2.0 * (w * x + y * z)
         t1 = +1.0 - 2.0 * (x * x + y * y)
@@ -216,26 +239,31 @@ class Controller:
 
     def proc_done_Cb(self, msg):
         self.proc_done = True
+        #########################################
+        #                                       #
+    #####       Update setpoint functions       #####
+        #                                       #
+        #########################################
 
-    ## Update setpoint message
+    ## Update local setpoint message
     def updateSp(self):
         #Calculate distance to point
         self.distance = math.sqrt((self.local_pos.x - self.sp.pose.position.x)** 2 + (self.local_pos.y - self.sp.pose.position.y)** 2)
-        y, p, r = self.quaternion_to_euler(self.local_orient.x, self.local_orient.y, self.local_orient.z, self.local_orient.w)
+        y, p, r = self.quaternions_to_euler(self.local_orient.x, self.local_orient.y, self.local_orient.z, self.local_orient.w)
         self.height = abs(self.local_pos.z - self.sp.pose.position.z)
         #Calculate rotation difference
-        yaw, pitch, roll = self.quaternion_to_euler(self.sp.pose.orientation.x, self.sp.pose.orientation.y, self.sp.pose.orientation.z, self.sp.pose.orientation.w)
+        yaw, pitch, roll = self.quaternions_to_euler(self.sp.pose.orientation.x, self.sp.pose.orientation.y, self.sp.pose.orientation.z, self.sp.pose.orientation.w)
         self.rotation = y - yaw
         self.rotation = abs((self.rotation + math.pi) % (math.pi*2) - math.pi)
         
-        #print(self.height, self.local_pos.z)
+        print("The distance is: {:.3f} m.".format(self.distance), "The rotational error: {:.3f} degrees.".format(self.rotation), "The altitude error: {:.3f} m.".format(self.height))
         if ((self.distance <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2) and self.proc_done):
             
             if(not self.simulation):
                 self.proc_done = False
                 self.capture_image()
-            
-            print("diller")
+            for line in range(10):
+                print("diller")
             self.sp.pose.position.x = float(self.coordinates[self.update][0])
             self.sp.pose.position.y = float(self.coordinates[self.update][1])
             #print(self.sp.pose.position.x, self.sp.pose.position.y, self.coordinates[self.update][2])
@@ -263,20 +291,25 @@ class Controller:
         #Calculate distance to point
         self.g = self.geod.Inverse(self.setp.pose.position.latitude, self.setp.pose.position.longitude, self.local_coord.latitude, self.local_coord.longitude)
         self.height = abs(self.local_coord.altitude - self.setp.pose.position.altitude)
-        #print(self.local_coord.altitude)
-        #print("The distance is {:.3f} m.".format(self.g['s12']), self.rotation, self.height)
-        
-        if ((self.g['s12'] <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2)):
-            #print(float(self.coordinates[self.update][0]))
-            #print(float(self.coordinates[self.update][1]))
-            print("globaldiller")
-            #print(self.g['s12'])
+        print("The distance is: {:.3f} m.".format(self.g['s12']), "The rotational error: {:.3f} degrees.".format(self.rotation), "The altitude error: {:.3f} m.".format(self.height))
+        #Update the setpoint
+        if ((self.g['s12'] <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2) and self.proc_done):
+            if(not self.simulation):
+                self.proc_done = False
+                self.capture_image()
+            for line in range(10):
+                print("globaldiller")
             self.setp.pose.position.latitude = float(self.coordinates[self.update][0])
             self.setp.pose.position.longitude = float(self.coordinates[self.update][1])
             #self.setp.pose.position.altitude = self.local_coord.altitude
             self.setp.pose.orientation.x, self.setp.pose.orientation.y, self.setp.pose.orientation.z, self.setp.pose.orientation.w = self.euler_to_quaternion(0,0,math.radians(float(self.coordinates[self.update][2])))
             self.update+=1
-        
+        #########################################
+        #                                       #
+    #####               Main loop               #####
+        #                                       #
+        #########################################
+
 # Main function
 def main():
 
@@ -325,14 +358,26 @@ def main():
 
     # activate OFFBOARD mode
     modes.setOffboardMode()
-    cnt.initCb()
-    # ROS main loop
-    while not rospy.is_shutdown():
-        cnt.updateSetp()
-        #sp_pub.publish(cnt.sp)
-        setpoint_global_pub.publish(cnt.setp)
-        rate.sleep()
-
+    # initlocalCb for local coordinates, initglobalCb for gps coordinates
+    
+    if (localcoordinates):
+        cnt.initlocalCb()
+        # ROS main loop
+        while not rospy.is_shutdown():
+            # cnt.updateSp for local coordinates, cnt.updateSetp for gps coordinates
+            cnt.updateSp()
+            #sp_pub.publish(cnt.sp)
+            sp_pub.publish(cnt.sp)
+            rate.sleep()
+    else:
+        cnt.initglobalCb()
+        # ROS main loop
+        while not rospy.is_shutdown():
+            # cnt.updateSp for local coordinates, cnt.updateSetp for gps coordinates
+            cnt.updateSetp()
+            #sp_pub.publish(cnt.sp)
+            setpoint_global_pub.publish(cnt.setp)
+            rate.sleep()
 if __name__ == '__main__':
 	try:
 		main()

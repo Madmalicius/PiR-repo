@@ -2,17 +2,19 @@
 import cv2
 import numpy as np
 import rospy
-from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image, NavSatFix
 from camera_controller import CameraController
 from std_srvs.srv import Trigger
 from std_msgs.msg import Bool
+from GPSPhoto import gpsphoto
+from PIL import Image
+import time
 
 
 class HoleDetector():
 
     def __init__(self):
-        self.cam_ctrl = CameraController()
+        pass
 
     def detect(self, img):
         hsv = cv2.cvtColor(self.img, cv2.COLOR_BGR2HSV)
@@ -114,6 +116,9 @@ proc_data = []
 
 cam = None
 
+imgDirPath = "~/fence_imgs"
+faultCount = 0
+
 # On new image, save image message and current gps position
 def image_callback(msg):
     global proc_data, cam
@@ -128,6 +133,17 @@ def gps_callback(msg):
     global current_pos
     current_pos = (msg.latitude, msg.longitude, msg.altitude)
 
+def ImgGPSCombiner(pos,imgPath):
+    imgPathTagged = imgPath + "Tag.jpg"
+
+    photo = gpsphoto.GPSPhoto(imgPath)
+
+    info = gpsphoto.GPSInfo((pos[0], pos[1]))
+
+    # Modify GPS Data
+    photo.modGPSData(info, imgPathTagged)
+    os.remove(imgPath)
+
 if __name__ == '__main__':
     cam = CameraController()
     hd = HoleDetector()
@@ -135,7 +151,7 @@ if __name__ == '__main__':
     rospy.init_node("holedetector_vision")
     rospy.Service("/camera/take_img", Trigger, image_callback)
     rospy.Subscriber("/mavros/global_position/global", NavSatFix, gps_callback)
-    done_pub = rospy.Publisher("/camera/proc_done", Bool)
+    done_pub = rospy.Publisher("/camera/proc_done", Bool, queue_size=10)
 
     time.sleep(2)
 
@@ -151,7 +167,7 @@ if __name__ == '__main__':
         print("Processing image")
         img, pos = proc_data.pop(0)
 
-        cv2.imwrite("~/fence_imgs/img_" + str(cnt) + ".jpg")
+        cv2.imwrite("~/fence_imgs/img_" + str(cnt) + ".jpg", img)
         cnt += 1
         
         # Run detection
@@ -159,7 +175,10 @@ if __name__ == '__main__':
         # If fault, publish image and 
         if fault:
             print("Fault detected!")
-            # TODO Save image with position
+            imgPath = imgDirPath + "/Err"+str(faultCount)
+            cv2.imwrite(imgPath+".jpg",img)
+            ImgGPSCombiner(pos,imgPath)
+            faultCount += 1
 
         proc_done = Bool()
         proc_done.data = True
