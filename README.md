@@ -66,7 +66,7 @@ A download can be found [here](https://nodejs.org/en/download/)
 open CMD in the folder containing the `index.html` file and run the following commands:
 ```cmd
 npm install http-server -g
-http-server
+http-server -c-1
 ```
 
 ### Step 4
