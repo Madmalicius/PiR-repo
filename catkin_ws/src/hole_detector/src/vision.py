@@ -135,7 +135,7 @@ if __name__ == '__main__':
     rospy.init_node("holedetector_vision")
     rospy.Service("/camera/take_img", Trigger, image_callback)
     rospy.Subscriber("/mavros/global_position/global", NavSatFix, gps_callback)
-    done_pub = rospy.Publisher("/camera/proc_done", Bool)
+    done_pub = rospy.Publisher("/camera/proc_done", Bool, queue_size=10)
 
     time.sleep(2)
 
