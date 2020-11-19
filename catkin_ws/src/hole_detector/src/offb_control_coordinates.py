@@ -117,8 +117,8 @@ class Controller:
         #Uncertainty for position control
         self.uncertain_dist = 0.2
         #2 degrees
-        self.uncertain_rad = 0.17
-        #Altitude in meters to fly
+        self.uncertain_rad = 0.39
+        #Set the altitude
         self.altitude = 2
         # define the WGS84 ellipsoid
         self.geod = Geodesic.WGS84
@@ -132,9 +132,10 @@ class Controller:
 
         #########################################
         #                                       #
-    #####       Load path file (csv format)     #####
+    #####       Load path file (csv type)       #####
         #                                       #
         #########################################
+
         basePath = os.path.dirname(os.path.abspath(__file__))
         # open file in read mode
         with open(basePath + '/geodetic_coordinates.csv', 'r') as read_obj:
@@ -155,6 +156,7 @@ class Controller:
     #####           Callback functions          #####
         #                                       #
         #########################################
+
     ## local position callback
     def posCb(self, msg):
         self.local_pos.x = msg.pose.position.x
@@ -183,13 +185,13 @@ class Controller:
     ## Initialize flight height to ground level +2m
     def initCb(self):
         msg = rospy.wait_for_message('/mavros/altitude', Altitude)
-        self.setp.pose.position.altitude = msg.amsl +self.altitude
+        self.setp.pose.position.altitude = msg.amsl + self.altitude
         pos = rospy.wait_for_message('/mavros/global_position/global', NavSatFix)
         self.setp.pose.position.latitude = pos.latitude
         self.setp.pose.position.longitude = pos.longitude
         #########################################
         #                                       #
-    #####         Conversion functions          #####
+    #####           Conversion functions        #####
         #                                       #
         #########################################
 
@@ -229,12 +231,12 @@ class Controller:
 
     def proc_done_Cb(self, msg):
         self.proc_done = True
+        #########################################
+        #                                       #
+    #####       Update setpoint functions       #####
+        #                                       #
+        #########################################
 
-        #########################################
-        #                                       #
-    #####       Update the setpoint function    #####
-        #                                       #
-        #########################################
     ## Update local setpoint message
     def updateSp(self):
         #Calculate distance to point
@@ -291,14 +293,15 @@ class Controller:
                 print("globaldiller")
             self.setp.pose.position.latitude = float(self.coordinates[self.update][0])
             self.setp.pose.position.longitude = float(self.coordinates[self.update][1])
+            #self.setp.pose.position.altitude = self.local_coord.altitude
             self.setp.pose.orientation.x, self.setp.pose.orientation.y, self.setp.pose.orientation.z, self.setp.pose.orientation.w = self.euler_to_quaternion(0,0,math.radians(float(self.coordinates[self.update][2])))
             self.update+=1
-
         #########################################
         #                                       #
     #####               Main loop               #####
         #                                       #
-        #########################################        
+        #########################################
+
 # Main function
 def main():
 
@@ -321,7 +324,6 @@ def main():
     rospy.Subscriber('mavros/local_position/pose', PoseStamped, cnt.orientCb)
 
     #Subscribe to drones gps
-    #Use altitude topic due to global_position/global having incorrect altitude offset
     rospy.Subscriber('/mavros/global_position/global', NavSatFix, cnt.globalCb)
     rospy.Subscriber('/mavros/altitude', Altitude, cnt.altitudeCb)
 
