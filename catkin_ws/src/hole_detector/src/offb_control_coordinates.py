@@ -125,11 +125,13 @@ class Controller:
         # image proccesing done
         self.proc_done = True
 
-
+#################################################################################################################################################
         ### ------------SIMULATION------------ ###
         self.simulation = False
         ### ---------------------------------- ###
-
+        global localcoordinates
+        localcoordinates = True
+        ### ---------------------------------- ###
         #########################################
         #                                       #
     #####       Load path file (csv type)       #####
@@ -247,21 +249,21 @@ class Controller:
     def updateSp(self):
         #Calculate distance to point
         self.distance = math.sqrt((self.local_pos.x - self.sp.pose.position.x)** 2 + (self.local_pos.y - self.sp.pose.position.y)** 2)
-        y, p, r = self.quaternion_to_euler(self.local_orient.x, self.local_orient.y, self.local_orient.z, self.local_orient.w)
+        y, p, r = self.quaternions_to_euler(self.local_orient.x, self.local_orient.y, self.local_orient.z, self.local_orient.w)
         self.height = abs(self.local_pos.z - self.sp.pose.position.z)
         #Calculate rotation difference
-        yaw, pitch, roll = self.quaternion_to_euler(self.sp.pose.orientation.x, self.sp.pose.orientation.y, self.sp.pose.orientation.z, self.sp.pose.orientation.w)
+        yaw, pitch, roll = self.quaternions_to_euler(self.sp.pose.orientation.x, self.sp.pose.orientation.y, self.sp.pose.orientation.z, self.sp.pose.orientation.w)
         self.rotation = y - yaw
         self.rotation = abs((self.rotation + math.pi) % (math.pi*2) - math.pi)
         
-        #print(self.height, self.local_pos.z)
+        print("The distance is: {:.3f} m.".format(self.distance), "The rotational error: {:.3f} degrees.".format(self.rotation), "The altitude error: {:.3f} m.".format(self.height))
         if ((self.distance <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2) and self.proc_done):
             
             if(not self.simulation):
                 self.proc_done = False
                 self.capture_image()
-            
-            print("diller")
+            for line in range(10):
+                print("diller")
             self.sp.pose.position.x = float(self.coordinates[self.update][0])
             self.sp.pose.position.y = float(self.coordinates[self.update][1])
             #print(self.sp.pose.position.x, self.sp.pose.position.y, self.coordinates[self.update][2])
@@ -357,15 +359,25 @@ def main():
     # activate OFFBOARD mode
     modes.setOffboardMode()
     # initlocalCb for local coordinates, initglobalCb for gps coordinates
-    cnt.initlocalCb()
-    # ROS main loop
-    while not rospy.is_shutdown():
-        # cnt.updateSp for local coordinates, cnt.updateSetp for gps coordinates
-        cnt.updateSp()
-        #sp_pub.publish(cnt.sp)
-        setpoint_global_pub.publish(cnt.setp)
-        rate.sleep()
-
+    
+    if (localcoordinates):
+        cnt.initlocalCb()
+        # ROS main loop
+        while not rospy.is_shutdown():
+            # cnt.updateSp for local coordinates, cnt.updateSetp for gps coordinates
+            cnt.updateSp()
+            #sp_pub.publish(cnt.sp)
+            sp_pub.publish(cnt.sp)
+            rate.sleep()
+    else:
+        cnt.initglobalCb()
+        # ROS main loop
+        while not rospy.is_shutdown():
+            # cnt.updateSp for local coordinates, cnt.updateSetp for gps coordinates
+            cnt.updateSetp()
+            #sp_pub.publish(cnt.sp)
+            setpoint_global_pub.publish(cnt.setp)
+            rate.sleep()
 if __name__ == '__main__':
 	try:
 		main()
