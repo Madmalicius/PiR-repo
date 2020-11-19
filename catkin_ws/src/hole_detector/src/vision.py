@@ -11,7 +11,7 @@ from std_msgs.msg import Bool
 class HoleDetector():
 
     def __init__(self):
-        self.cam_ctrl = CameraController()
+        pass
 
     def detect(self, img):
         hsv = cv2.cvtColor(self.img, cv2.COLOR_BGR2HSV)
