@@ -26,7 +26,7 @@ pip3 install --user --upgrade empy jinja2 numpy packaging pyros-genmsg toml pyya
 
 curl https://raw.githubusercontent.com/mavlink/mavros/master/mavros/scripts/install_geographiclib_datasets.sh | sudo bash
 
-if [ -d ~/Firmware]; then
+if [ -d ~/Firmware ]; then
     echo "PX4 Firmware is installed"
 else
     pushd ~
