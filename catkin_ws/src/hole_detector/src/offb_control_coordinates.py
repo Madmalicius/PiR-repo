@@ -174,7 +174,7 @@ class Controller:
     ## Initialize flight height to ground level +2m
     def initCb(self):
         msg = rospy.wait_for_message('/mavros/altitude', Altitude)
-        self.setp.pose.position.altitude = msg.amsl +2
+        self.setp.pose.position.altitude = msg.amsl +1.5
         pos = rospy.wait_for_message('/mavros/global_position/global', NavSatFix)
         self.setp.pose.position.latitude = pos.latitude
         self.setp.pose.position.longitude = pos.longitude
