@@ -225,7 +225,7 @@ class Controller:
         #print(self.height, self.local_pos.z)
         if ((self.distance <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2) and self.proc_done):
             
-            if(self.simulation):
+            if(not self.simulation):
                 self.proc_done = False
                 self.capture_image()
             
