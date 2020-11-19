@@ -192,7 +192,7 @@ class Controller:
         self.setp.pose.position.latitude = pos.latitude
         self.setp.pose.position.longitude = pos.longitude
     def initlocalCb(self):
-        msg = rospy.wait_for_message('mavros/local_position/pose', PoseStamped)
+        msg = rospy.wait_for_message('/vrpn_client_node/zedrone/pose', PoseStamped)
         self.local_pos.x = msg.pose.position.x
         self.local_pos.y = msg.pose.position.y
         self.local_pos.z = msg.pose.position.z + self.altitude
@@ -329,7 +329,7 @@ def main():
     rospy.Subscriber('mavros/state', State, cnt.stateCb)
 
     # Subscribe to drone's local position
-    rospy.Subscriber('mavros/local_position/pose', PoseStamped, cnt.orientCb)
+    rospy.Subscriber('/vrpn_client_node/zedrone/pose', PoseStamped, cnt.orientCb)
 
     #Subscribe to drones gps
     rospy.Subscriber('/mavros/global_position/global', NavSatFix, cnt.globalCb)
