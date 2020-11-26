@@ -115,11 +115,11 @@ class Controller:
         #########################################
 
         #Uncertainty for position control
-        self.uncertain_dist = 0.1
+        self.uncertain_dist = 0.15
         #2 degrees
-        self.uncertain_rad = 0.035
+        self.uncertain_rad = 0.0872
         #Set the altitude
-        self.altitude = 2
+        self.altitude = 2.5
         # define the WGS84 ellipsoid
         self.geod = Geodesic.WGS84
         # image proccesing done
