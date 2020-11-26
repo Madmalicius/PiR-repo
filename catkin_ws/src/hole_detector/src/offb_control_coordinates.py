@@ -130,7 +130,7 @@ class Controller:
         self.simulation = False
         ### ---------------------------------- ###
         global localcoordinates
-        localcoordinates = True
+        localcoordinates = False
         ### ---------------------------------- ###
         #########################################
         #                                       #
