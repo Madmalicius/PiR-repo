@@ -255,7 +255,6 @@ class Controller:
         yaw, pitch, roll = self.quaternions_to_euler(self.sp.pose.orientation.x, self.sp.pose.orientation.y, self.sp.pose.orientation.z, self.sp.pose.orientation.w)
         self.rotation = y - yaw
         self.rotation = abs((self.rotation + math.pi) % (math.pi*2) - math.pi)
-        
         print("The distance is: {:.3f} m.".format(self.distance), "The rotational error: {:.3f} degrees.".format(self.rotation), "The altitude error: {:.3f} m.".format(self.height))
         if ((self.distance <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2) and self.proc_done):
             
@@ -284,13 +283,15 @@ class Controller:
     ## Update coordinate setpoint message
     def updateSetp(self):
         #Calculate rotational difference
-        yaw, pitch, roll = self.quaternion_to_euler(self.setp.pose.orientation.x, self.setp.pose.orientation.y, self.setp.pose.orientation.z, self.setp.pose.orientation.w)
-        y, p, r = self.quaternion_to_euler(self.local_orient.x, self.local_orient.y, self.local_orient.z, self.local_orient.w)
+        yaw, pitch, roll = self.quaternions_to_euler(self.setp.pose.orientation.x, self.setp.pose.orientation.y, self.setp.pose.orientation.z, self.setp.pose.orientation.w)
+        y, p, r = self.quaternions_to_euler(self.local_orient.x, self.local_orient.y, self.local_orient.z, self.local_orient.w)
         self.rotation = y - yaw
         self.rotation = abs((self.rotation + math.pi) % (math.pi*2) - math.pi)
         #Calculate distance to point
         self.g = self.geod.Inverse(self.setp.pose.position.latitude, self.setp.pose.position.longitude, self.local_coord.latitude, self.local_coord.longitude)
         self.height = abs(self.local_coord.altitude - self.setp.pose.position.altitude)
+        #print(y, p, r)
+        #print(yaw, pitch, roll)
         print("The distance is: {:.3f} m.".format(self.g['s12']), "The rotational error: {:.3f} degrees.".format(self.rotation), "The altitude error: {:.3f} m.".format(self.height))
         #Update the setpoint
         if ((self.g['s12'] <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2) and self.proc_done):
@@ -329,7 +330,7 @@ def main():
     rospy.Subscriber('mavros/state', State, cnt.stateCb)
 
     # Subscribe to drone's local position
-    rospy.Subscriber('/vrpn_client_node/zedrone/pose', PoseStamped, cnt.orientCb)
+    rospy.Subscriber('/mavros/local_position/pose', PoseStamped, cnt.orientCb)
 
     #Subscribe to drones gps
     rospy.Subscriber('/mavros/global_position/global', NavSatFix, cnt.globalCb)
@@ -344,9 +345,9 @@ def main():
     # Subscribe to image prossing done flag
     rospy.Subscriber("/camera/proc_done", Bool, cnt.proc_done_Cb)
 
-    while not cnt.state.armed:
-        modes.setArm()
-        rate.sleep()
+#    while not cnt.state.armed:
+#        modes.setArm()
+#        rate.sleep()
 
     # We need to send few setpoint messages, then activate OFFBOARD mode, to take effect
     k=0
@@ -357,7 +358,7 @@ def main():
         k = k + 1
 
     # activate OFFBOARD mode
-    #modes.setOffboardMode()
+#    modes.setOffboardMode()
     # initlocalCb for local coordinates, initglobalCb for gps coordinates
     
     if (localcoordinates):
