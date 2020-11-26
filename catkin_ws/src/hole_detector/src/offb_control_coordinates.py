@@ -296,8 +296,10 @@ class Controller:
         #Update the setpoint
         if ((self.g['s12'] <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2) and self.proc_done):
             if(not self.simulation):
+                print("Taking image")
                 self.proc_done = False
                 self.capture_image()
+                print("Image taken")
             for line in range(10):
                 print("globaldiller")
             self.setp.pose.position.latitude = float(self.coordinates[self.update][0])
@@ -344,6 +346,10 @@ def main():
 
     # Subscribe to image prossing done flag
     rospy.Subscriber("/camera/proc_done", Bool, cnt.proc_done_Cb)
+
+    print("Waiting for image service")
+    rospy.wait_for_service("/camera/take_img")
+    print("Image service found!")
 
 #    while not cnt.state.armed:
 #        modes.setArm()
