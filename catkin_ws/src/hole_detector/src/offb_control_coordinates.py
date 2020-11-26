@@ -357,7 +357,7 @@ def main():
         k = k + 1
 
     # activate OFFBOARD mode
-    modes.setOffboardMode()
+    #modes.setOffboardMode()
     # initlocalCb for local coordinates, initglobalCb for gps coordinates
     
     if (localcoordinates):
