@@ -153,6 +153,8 @@ if __name__ == '__main__':
     rospy.Subscriber("/mavros/global_position/global", NavSatFix, gps_callback)
     done_pub = rospy.Publisher("/camera/proc_done", Bool, queue_size=10)
 
+    faultCount = 0
+
     time.sleep(2)
 
     rate = rospy.Rate(15)
@@ -167,7 +169,7 @@ if __name__ == '__main__':
         print("Processing image")
         img, pos = proc_data.pop(0)
 
-        cv2.imwrite("~/fence_imgs/img_" + str(cnt) + ".jpg", img)
+        cv2.imwrite("/home/ubuntu/fence_imgs/img_" + str(cnt) + ".jpg", img)
         cnt += 1
         
         # Run detection
