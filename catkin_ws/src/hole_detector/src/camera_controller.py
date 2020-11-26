@@ -50,7 +50,7 @@ if __name__ == '__main__':
     cc = CameraController()
     #rospy.init_node("camera_controller")
 
-    for i in range(0, 1):
+    for i in range(0, 50):
 
         t = time.time()
         img = cc.capture()
