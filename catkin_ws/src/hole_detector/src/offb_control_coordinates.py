@@ -294,8 +294,8 @@ class Controller:
         #print(yaw, pitch, roll)
         print("The distance is: {:.3f} m.".format(self.g['s12']), "The rotational error: {:.3f} degrees.".format(self.rotation), "The altitude error: {:.3f} m.".format(self.height))
         #Update the setpoint
-        #if ((self.g['s12'] <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2) and self.proc_done):
-        if (True):
+        if ((self.g['s12'] <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2) and self.proc_done):
+
             if(not self.simulation):
                 print("Taking image")
                 self.proc_done = False
