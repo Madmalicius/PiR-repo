@@ -117,7 +117,7 @@ class Controller:
         #Uncertainty for position control
         self.uncertain_dist = 0.15
         #2 degrees
-        self.uncertain_rad = 0.0872
+        self.uncertain_rad = math.radians(2)
         #Set the altitude
         self.altitude = 2.5
         # define the WGS84 ellipsoid
@@ -292,7 +292,7 @@ class Controller:
         self.height = abs(self.local_coord.altitude - self.setp.pose.position.altitude)
         #print(y, p, r)
         #print(yaw, pitch, roll)
-        print("The distance is: {:.3f} m.".format(self.g['s12']), "The rotational error: {:.3f} degrees.".format(self.rotation), "The altitude error: {:.3f} m.".format(self.height))
+        print("The distance is: {:.3f} m.".format(self.g['s12']), "The rotational error: {:.3f} degrees.".format(math.degrees(self.rotation)), "The altitude error: {:.3f} m.".format(self.height))
         #Update the setpoint
         if ((self.g['s12'] <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2) and self.proc_done):
 
