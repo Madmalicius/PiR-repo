@@ -117,9 +117,9 @@ class Controller:
         #########################################
 
         #Uncertainty for position control in meters
-        self.uncertain_dist = 0.15
+        self.uncertain_dist = 0.35
         #Uncertainty for angular control in radians
-        self.uncertain_rad = math.radians(2)
+        self.uncertain_rad = math.radians(5)
         #Set the altitude in meters
         self.altitude = 2.5
         # define the WGS84 ellipsoid
