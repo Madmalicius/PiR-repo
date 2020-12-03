@@ -240,8 +240,10 @@ class Controller:
         #     print("Service call failed: %s"%e)
 
     def take_image_Cb(self):
-        img_cmd = rospy.Publisher("/camera/take_img", Bool, queue_size=1)
-        img_cmd.publish(self.take_image)
+        if (self.cmd_send == False):
+            img_cmd = rospy.Publisher("/camera/take_img", Bool, queue_size=1)
+            img_cmd.publish(self.take_image)
+            self.cmd_send = True
 
     def proc_done_Cb(self, msg):
         self.proc_done = msg.data
@@ -306,6 +308,7 @@ class Controller:
                     print("Taking image")
                     self.check = False
                     self.proc_done = False
+                    self.cmd_send = False
                 for line in range(10):
                     print("globaldiller")
                 self.setp.pose.position.latitude = float(self.coordinates[self.update][0])
