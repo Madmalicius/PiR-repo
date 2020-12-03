@@ -128,6 +128,7 @@ class Controller:
         self.proc_done = False
         self.take_image = True
         self.check = True
+        self.cmd_send = False
 #################################################################################################################################################
         ### ------------SIMULATION------------ ###
         self.simulation = True
