@@ -118,16 +118,18 @@ cam = None
 
 imgDirPath = "~/fence_imgs"
 faultCount = 0
+cap_pub = None
 
 # On new image, save image message and current gps position
 def image_callback(msg):
-    global proc_data, cam
+    global proc_data, cam, cap_pub
     print("taking image")
     img = cam.capture()
     proc_data.append((img, current_pos))
     print("Image taken")
-
-    return [True, "Image taken"]
+    cap_done = Bool()
+    cap_done.data = True
+    cap_pub.publish(cap_done)
 
 def gps_callback(msg):
     global current_pos
@@ -149,8 +151,9 @@ if __name__ == '__main__':
     hd = HoleDetector()
 
     rospy.init_node("holedetector_vision")
-    rospy.Service("/camera/take_img", Trigger, image_callback)
+    rospy.Subscriber("/camera/take_img", Bool, image_callback)
     rospy.Subscriber("/mavros/global_position/global", NavSatFix, gps_callback)
+    cap_pub = rospy.Publisher("/camera/cap_done", Bool, queue_size=10)
     done_pub = rospy.Publisher("/camera/proc_done", Bool, queue_size=10)
 
     faultCount = 0
@@ -169,11 +172,10 @@ if __name__ == '__main__':
         print("Processing image")
         img, pos = proc_data.pop(0)
 
-        cv2.imwrite("/home/ubuntu/fence_imgs/img_" + str(cnt) + ".jpg", img)
         cnt += 1
         
         # Run detection
-        fault = False#hd.detect(img)
+        fault = True#hd.detect(img)
         # If fault, publish image and 
         if fault:
             print("Fault detected!")
