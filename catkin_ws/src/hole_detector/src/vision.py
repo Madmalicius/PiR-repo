@@ -156,7 +156,7 @@ def quaternions_to_euler(x, y, z, w):
 def pose_callback(msg):
     global current_rot
     quat = msg.pose.orientation
-    current_rot = quaternions_to_euler(quat[0], quat[1], quat[2], quat[3])
+    current_rot = quaternions_to_euler(quat.x, quat.y, quat.z, quat.w)
 
 def ImgGPSCombiner(pos,imgPath):
     imgPathTagged = imgPath + "Tag.jpg"
