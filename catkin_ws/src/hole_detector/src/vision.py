@@ -142,7 +142,7 @@ def ImgGPSCombiner(pos,imgPath):
 
     # Modify GPS Data
     photo.modGPSData(info, imgPathTagged)
-    os.remove(imgPath)
+    os.remove(imgPath+".jpg")
 
 if __name__ == '__main__':
     cam = CameraController()
