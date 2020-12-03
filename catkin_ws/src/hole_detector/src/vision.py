@@ -136,7 +136,7 @@ def gps_callback(msg):
 def ImgGPSCombiner(pos,imgPath):
     imgPathTagged = imgPath + "Tag.jpg"
 
-    photo = gpsphoto.GPSPhoto(imgPath)
+    photo = gpsphoto.GPSPhoto(imgPath+".jpg")
 
     info = gpsphoto.GPSInfo((pos[0], pos[1]))
 
