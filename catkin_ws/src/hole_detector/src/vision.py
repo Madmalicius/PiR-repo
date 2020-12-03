@@ -196,7 +196,7 @@ if __name__ == '__main__':
         print("Processing image")
         img, pos, rot = proc_data.pop(0)
 
-        img = imutils.rotate_bound(img, -rot[2])
+        img = imutils.rotate(img, -rot[2])
 
         cnt += 1
         
