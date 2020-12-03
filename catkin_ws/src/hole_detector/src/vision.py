@@ -3,11 +3,14 @@ import cv2
 import numpy as np
 import rospy
 from sensor_msgs.msg import Image, NavSatFix
+from geometry_msgs.msg import PoseStamped
 from camera_controller import CameraController
+import math
 from std_srvs.srv import Trigger
 from std_msgs.msg import Bool
 from GPSPhoto import gpsphoto
 from PIL import Image
+import imutils
 import time
 
 
@@ -112,6 +115,7 @@ class HoleDetector():
 
 
 current_pos = None
+current_rot = None
 proc_data = []
 
 cam = None
@@ -125,7 +129,7 @@ def image_callback(msg):
     global proc_data, cam, cap_pub
     print("taking image")
     img = cam.capture()
-    proc_data.append((img, current_pos))
+    proc_data.append((img, current_pos, current_rot))
     print("Image taken")
     cap_done = Bool()
     cap_done.data = True
@@ -134,6 +138,25 @@ def image_callback(msg):
 def gps_callback(msg):
     global current_pos
     current_pos = (msg.latitude, msg.longitude, msg.altitude)
+
+def quaternions_to_euler(x, y, z, w):
+    t0 = +2.0 * (w * x + y * z)
+    t1 = +1.0 - 2.0 * (x * x + y * y)
+    roll = math.atan2(t0, t1)
+    t2 = +2.0 * (w * y - z * x)
+    t2 = +1.0 if t2 > +1.0 else t2
+    t2 = -1.0 if t2 < -1.0 else t2
+    pitch = math.asin(t2)
+    t3 = +2.0 * (w * z + x * y)
+    t4 = +1.0 - 2.0 * (y * y + z * z)
+    yaw = math.atan2(t3, t4)
+
+    return [yaw, pitch, roll]
+
+def pose_callback(msg):
+    global current_rot
+    quat = msg.pose.orientation
+    current_rot = quaternions_to_euler(quat[0], quat[1], quat[2], quat[3])
 
 def ImgGPSCombiner(pos,imgPath):
     imgPathTagged = imgPath + "Tag.jpg"
@@ -153,6 +176,7 @@ if __name__ == '__main__':
     rospy.init_node("holedetector_vision")
     rospy.Subscriber("/camera/take_img", Bool, image_callback)
     rospy.Subscriber("/mavros/global_position/global", NavSatFix, gps_callback)
+    rospy.Subscriber("/mavros/local_position/pose", PoseStamped, pose_callback)
     cap_pub = rospy.Publisher("/camera/cap_done", Bool, queue_size=10)
     done_pub = rospy.Publisher("/camera/proc_done", Bool, queue_size=10)
 
@@ -170,7 +194,9 @@ if __name__ == '__main__':
         while len(proc_data) == 0 and (not rospy.is_shutdown()):
             rate.sleep()
         print("Processing image")
-        img, pos = proc_data.pop(0)
+        img, pos, rot = proc_data.pop(0)
+
+        img = imutils.rotate_bound(img, -rot[2])
 
         cnt += 1
         
