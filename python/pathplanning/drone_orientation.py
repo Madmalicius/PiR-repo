@@ -18,16 +18,18 @@ class Pathplanclass():
         #plotting data
         self.plotData =  True
 
-        self.plan_file = "/real_mission.plan"
-        self.csv_filename = '/drone_path.csv'
+        self.plan_file = "/outside_fence_wed.plan"
+        self.csv_filename = '/fence_2m.csv'
 
         self.uc = utmconv()
         #FIELD OF VIEW OF CAMERA IN METERS
-        self.FIELD_OF_VIEW = 5
+        self.FIELD_OF_VIEW = 8
         #OFFSET OF DRONE PATH FROM FENCE
-        self.FENCE_OFFSET = 2.5
+        self.FENCE_OFFSET = 2
 
         self.basePath = os.path.dirname(os.path.abspath(__file__))
+
+        self.dirrec = ""
 
         ##### RUNNING THE SCIPTS #####
         self.run_main(self.plan_file)
@@ -49,7 +51,7 @@ class Pathplanclass():
                 if(alt == 0):
                     break
 
-                print(lon, lat)
+                #print(lon, lat)
                 hemisphere, zone, letter, e, n = uc.geodetic_to_utm (lat,lon)
 
                 
@@ -68,8 +70,12 @@ class Pathplanclass():
 
         if (poly_line_offset_left.length > poly_line_offset_right.length):
             poly_line_offset = poly_line_offset_right
+            self.dirrec = "CCW"
+            print("CCW")
         else:
             poly_line_offset = poly_line_offset_left
+            self.dirrec = "CW"
+            print("CW")
 
         flight_path_x, flight_path_y = poly_line_offset.xy
 
@@ -101,16 +107,30 @@ class Pathplanclass():
                 else:    
                     angle = math.atan2(path_y[i+1]-path_y[i], path_x[i+1]-path_x[i]) * 180 / 3.1415
 
+
             #map range from -180;180 to 0;360 deg where 0 deg is along x axis
             angle = (angle + 360)%360
 
+            angle *= -1
+
+            if self.dirrec == "CW":
+                angle += 180
+            
+
             #calculating caputre orientation perendicular to the fence/drone path:
-            angle -= 90
+            #if (self.dirrec == "CW"):
+            #    angle +=  180
+
+            if angle > 360:
+                angle = angle%360
+            
             if(angle < 0):
                 angle = 360-abs(angle)
 
             angle = round(angle,2)
             angles.append(angle)
+
+            
     
             #print(str(i) + ": " + str(path_x[i]) + " at: " + str(angles[i]))
         return angles
@@ -152,8 +172,8 @@ class Pathplanclass():
     def fix_start_point(self, path_fence, flight_path_x, flight_path_y):
 
         node = path_fence[0]
-        print(path_fence[0])
-        print(flight_path_x)
+        #print(path_fence[0])
+        #print(flight_path_x)
         nodes = zip(flight_path_x,flight_path_y)
 
         shift = cdist([node], nodes).argmin()
@@ -163,14 +183,24 @@ class Pathplanclass():
 
         return fixed_x, fixed_y
 
+    def fix_dir(self, flight_path_x, flight_path_y):
+        if self.dirrec == "CCW":
+            x = np.flipud(flight_path_x) 
+            y = np.flipud(flight_path_y)
+        else:
+            x = flight_path_x
+            y = flight_path_y
+        return x, y
+
 
     def run_main(self,plan_file):
         hemisphere, zone, letter, path_fence = self.get_fence_position(plan_file) 
-        print(path_fence[0])
+        #print(path_fence[0])
         flight_path_x, flight_path_y = self.calculate_flight_path(path_fence)
+        flight_path_x, flight_path_y = self.fix_dir(flight_path_x, flight_path_y)
         photo_pos_x, photo_pos_y = self.calculate_photo_positions(flight_path_x, flight_path_y)
         photo_pos_x, photo_pos_y = self.fix_start_point(path_fence, photo_pos_x, photo_pos_y)
-        print(photo_pos_x)
+        
         photo_orientation = self.calculate_photo_orientation(photo_pos_x, photo_pos_y) # roation around z-axis
 
         lat,lon = self.convert_utm_to_lon_lat(hemisphere,zone,photo_pos_x,photo_pos_y) 
