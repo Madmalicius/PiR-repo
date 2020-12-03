@@ -7,6 +7,7 @@ from geometry_msgs.msg import Point, PoseStamped, Quaternion
 from geographic_msgs.msg import GeoPoseStamped, GeoPoint
 from mavros_msgs.msg import Altitude
 from sensor_msgs.msg import NavSatFix
+from std_msgs.msg import Bool
 # import all mavros messages and services
 from mavros_msgs.msg import *
 from mavros_msgs.srv import *
@@ -114,17 +115,18 @@ class Controller:
         #                                       #
         #########################################
 
-        #Uncertainty for position control
+        #Uncertainty for position control in meters
         self.uncertain_dist = 0.15
-        #2 degrees
+        #Uncertainty for angular control in radians
         self.uncertain_rad = math.radians(2)
-        #Set the altitude
+        #Set the altitude in meters
         self.altitude = 2.5
         # define the WGS84 ellipsoid
         self.geod = Geodesic.WGS84
         # image proccesing done
         self.proc_done = True
-
+        global take_image
+        take_image = False
 #################################################################################################################################################
         ### ------------SIMULATION------------ ###
         self.simulation = False
@@ -228,17 +230,19 @@ class Controller:
         return [yaw, pitch, roll]
 
     ## Starts caputuring image and returns when done
-    def capture_image(self):
-        rospy.wait_for_service('/camera/take_img')
-        try:
-            take_photo = rospy.ServiceProxy('/camera/take_img', Trigger)
-            take_photo()
-        except rospy.ServiceException as e:
-            print("Service call failed: %s"%e)
-        return
+    def capture_image_Cb(self):
+        self.capture = rospy.wait_for_message('/camera/cap_done', Bool)
+        self.check = self.capture.data
+        # try:
+        #     take_photo = rospy.ServiceProxy('/camera/take_img', Trigger)
+        #     take_photo()
+        # except rospy.ServiceException as e:
+        #     print("Service call failed: %s"%e)
+        return self.check
 
-    def proc_done_Cb(self, msg):
-        self.proc_done = True
+    def take_image_Cb(self):
+        img_cmd.publish(take_image)        
+
         #########################################
         #                                       #
     #####       Update setpoint functions       #####
@@ -257,7 +261,6 @@ class Controller:
         self.rotation = abs((self.rotation + math.pi) % (math.pi*2) - math.pi)
         print("The distance is: {:.3f} m.".format(self.distance), "The rotational error: {:.3f} degrees.".format(self.rotation), "The altitude error: {:.3f} m.".format(self.height))
         if ((self.distance <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2) and self.proc_done):
-            
             if(not self.simulation):
                 self.proc_done = False
                 self.capture_image()
@@ -292,15 +295,14 @@ class Controller:
         self.height = abs(self.local_coord.altitude - self.setp.pose.position.altitude)
         #print(y, p, r)
         #print(yaw, pitch, roll)
+        self.proc_done = self.capture_image_Cb()
         print("The distance is: {:.3f} m.".format(self.g['s12']), "The rotational error: {:.3f} degrees.".format(math.degrees(self.rotation)), "The altitude error: {:.3f} m.".format(self.height))
         #Update the setpoint
         if ((self.g['s12'] <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2) and self.proc_done):
-
+            self.take_image_Cb()
             if(not self.simulation):
                 print("Taking image")
                 self.proc_done = False
-                self.capture_image()
-                print("Image taken")
             for line in range(10):
                 print("globaldiller")
             self.setp.pose.position.latitude = float(self.coordinates[self.update][0])
@@ -308,6 +310,7 @@ class Controller:
             #self.setp.pose.position.altitude = self.local_coord.altitude
             self.setp.pose.orientation.x, self.setp.pose.orientation.y, self.setp.pose.orientation.z, self.setp.pose.orientation.w = self.euler_to_quaternion(0,0,math.radians(float(self.coordinates[self.update][2])))
             self.update+=1
+
         #########################################
         #                                       #
     #####               Main loop               #####
@@ -346,11 +349,14 @@ def main():
     # Make sure the drone is armed
 
     # Subscribe to image prossing done flag
-    rospy.Subscriber("/camera/proc_done", Bool, cnt.proc_done_Cb)
+    rospy.Subscriber("/camera/cap_done", Bool, cnt.capture_image_Cb)
+    image_cmd = rospy.Publisher("/camera/proc_done", Bool, cnt.take_image_Cb, queue_size=1)
 
-    print("Waiting for image service")
-    rospy.wait_for_service("/camera/take_img")
-    print("Image service found!")
+
+
+    #print("Waiting for image service")
+    #rospy.wait_for_service("/camera/take_img")
+    #print("Image service found!")
 
 #    while not cnt.state.armed:
 #        modes.setArm()
