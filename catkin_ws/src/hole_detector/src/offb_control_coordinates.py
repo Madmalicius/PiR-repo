@@ -20,7 +20,6 @@ import numpy as np
 from geographiclib.geodesic import Geodesic
 
 
-img_cmd = None
 # Flight modes class
 # Flight modes are activated using ROS services
 class fcuModes:
@@ -126,7 +125,9 @@ class Controller:
         # define the WGS84 ellipsoid
         self.geod = Geodesic.WGS84
         # image proccesing done
-        self.proc_done = True
+        self.proc_done = False
+        self.take_image = True
+        self.check = True
 #################################################################################################################################################
         ### ------------SIMULATION------------ ###
         self.simulation = True
@@ -239,8 +240,8 @@ class Controller:
         #     print("Service call failed: %s"%e)
 
     def take_image_Cb(self):
-        global img_cmd
-        img_cmd.publish(take_image)
+        img_cmd = rospy.Publisher("/camera/take_img", Bool, queue_size=1)
+        img_cmd.publish(self.take_image)
 
     def proc_done_Cb(self, msg):
         self.proc_done = msg.data
@@ -353,7 +354,7 @@ def main():
     # Subscribe to image prossing done flag
     rospy.Subscriber("/camera/cap_done", Bool, cnt.capture_image_Cb)
     rospy.Subscriber("/camera/proc_done", Bool, cnt.proc_done_Cb)
-    img_cmd = rospy.Publisher("/camera/take_img", Bool, queue_size=1)
+    #img_cmd = rospy.Publisher("/camera/take_img", Bool, queue_size=1)
 
 
 
@@ -361,9 +362,9 @@ def main():
     #rospy.wait_for_service("/camera/take_img")
     #print("Image service found!")
 
-    while not cnt.state.armed:
-        modes.setArm()
-        rate.sleep()
+#    while not cnt.state.armed:
+#        modes.setArm()
+#        rate.sleep()
 
     # We need to send few setpoint messages, then activate OFFBOARD mode, to take effect
     k=0
@@ -374,7 +375,7 @@ def main():
         k = k + 1
 
     # activate OFFBOARD mode
-    modes.setOffboardMode()
+#    modes.setOffboardMode()
     # initlocalCb for local coordinates, initglobalCb for gps coordinates
     
     if (localcoordinates):
