@@ -12,7 +12,11 @@ from GPSPhoto import gpsphoto
 from PIL import Image
 import imutils
 import time
+<<<<<<< HEAD
 import os
+=======
+from warp_image_func import warp_image 
+>>>>>>> 004bbeff9770d6903d4f3b4ffd3973b48dc1c41d
 
 
 class HoleDetector():
@@ -182,6 +186,14 @@ if __name__ == '__main__':
     cap_pub = rospy.Publisher("/camera/cap_done", Bool, queue_size=10)
     done_pub = rospy.Publisher("/camera/proc_done", Bool, queue_size=10)
 
+    K = np.array([4076.983308901881,0.0,1959.7405511739269,0.0,4068.5673929816157,1630.9662530185433,0.0,0.0,1.0])
+    K = K.reshape((3,3))
+    dist = np.array([-0.196564133150198,0.40723829946509277,-4.523529625230164,15.295234865994818])
+
+    img_width = 4064
+    img_height = 3040
+    mx, my = cv2.fisheye.initUndistortRectifyMap(K, dist, None, K, (img_width, img_height), cv2.CV_32FC1)
+
     faultCount = 0
 
     time.sleep(2)
@@ -198,6 +210,13 @@ if __name__ == '__main__':
         print("Processing image")
         img, pos, rot = proc_data.pop(0)
 
+        # Undistort
+        img = cv2.remap(img, mx, my, cv2.INTER_LINEAR)
+
+        # Correct pitch
+        img = warp_image(img, np.degrees(rot[1]) - 20)
+
+        # Correct roll
         img = imutils.rotate_bound(img, np.degrees(rot[2]))
 
         cnt += 1

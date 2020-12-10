@@ -117,21 +117,21 @@ class Controller:
         #########################################
 
         #Uncertainty for position control in meters
-        self.uncertain_dist = 0.15
+        self.uncertain_dist = 0.35
         #Uncertainty for angular control in radians
-        self.uncertain_rad = math.radians(2)
+        self.uncertain_rad = math.radians(5)
         #Set the altitude in meters
-        self.altitude = 2.5
+        self.altitude = 2
         # define the WGS84 ellipsoid
         self.geod = Geodesic.WGS84
         # image proccesing done
-        self.proc_done = False
+        self.proc_done = True
         self.take_image = True
         self.check = True
         self.cmd_send = False
 #################################################################################################################################################
         ### ------------SIMULATION------------ ###
-        self.simulation = True
+        self.simulation = False
         ### ---------------------------------- ###
         global localcoordinates
         localcoordinates = False
