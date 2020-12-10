@@ -30,7 +30,7 @@ if [ -d ~/Firmware ]; then
     echo "PX4 Firmware is installed"
 else
     pushd ~
-        git clone https://github.com/PX4/Firmware.git
+        curl https://raw.githubusercontent.com/PX4/Devguide/v1.8.2/build_scripts/ubuntu_sim.sh | bash
     popd
     pushd ~/Firmware
         git submodule update --init --recursive
@@ -99,7 +99,7 @@ else
     popd
 fi
 
-ln -s /home/$USER/eit_ws/src/eit_playground/init.d-posix/* /home/$USER/Firmware/ROMFS/px4fmu_common/init.d-posix/airframes
+ln -s /home/$USER/eit_ws/src/eit_playground/init.d-posix/* /home/$USER/Firmware/ROMFS/px4fmu_common/init.d-posix/
 ln -s /home/$USER/eit_ws/src/eit_playground/mixers/* /home/$USER/Firmware/ROMFS/px4fmu_common/mixers/
 
 echo $USER
