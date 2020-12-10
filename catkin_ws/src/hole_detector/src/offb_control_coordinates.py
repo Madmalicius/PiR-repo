@@ -117,17 +117,18 @@ class Controller:
         #########################################
 
         #Uncertainty for position control in meters
-        self.uncertain_dist = 0.35
+        self.uncertain_dist = 0.10
         #Uncertainty for angular control in radians
         self.uncertain_rad = math.radians(5)
         #Set the altitude in meters
-        self.altitude = 2.5
+        self.altitude = 2
         # define the WGS84 ellipsoid
         self.geod = Geodesic.WGS84
         # image proccesing done
         self.proc_done = True
         self.take_image = True
         self.check = True
+        self.img_cmd = rospy.Publisher("/camera/take_img", Bool, queue_size=1)
 #################################################################################################################################################
         ### ------------SIMULATION------------ ###
         self.simulation = False
@@ -233,25 +234,24 @@ class Controller:
     ## Starts caputuring image and returns when done
     def capture_image_Cb(self, msg):
         self.check = msg.data
+        print("capture image callback")
         # try:
         #     take_photo = rospy.ServiceProxy('/camera/take_img', Trigger)
         #     take_photo()
         # except rospy.ServiceException as e:
         #     print("Service call failed: %s"%e)
-
     def take_image_Cb(self):
         print("take image callback")
-        img_cmd = rospy.Publisher("/camera/take_img", Bool, queue_size=1)
-        img_cmd.publish(self.take_image)
+        self.img_cmd.publish(self.take_image)
 
     def proc_done_Cb(self, msg):
         self.proc_done = msg.data
+        print("proc done callback")
         #########################################
         #                                       #
     #####       Update setpoint functions       #####
         #                                       #
         #########################################
-
     ## Update local setpoint message
     def updateSp(self):
         #Calculate distance to point
@@ -301,7 +301,9 @@ class Controller:
         #print("The distance is: {:.3f} m.".format(self.g['s12']), "The rotational error: {:.3f} degrees.".format(math.degrees(self.rotation)), "The altitude error: {:.3f} m.".format(self.height))
         #Update the setpoint
         if ((self.g['s12'] <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2) and self.proc_done):
+        #if (True):
             self.take_image_Cb()
+            print("halleluja")
             if (self.check == True):
                 print("got into check")
                 if(not self.simulation):
@@ -324,7 +326,7 @@ class Controller:
 
 # Main function
 def main():
-
+    print("in main")
     # initiate node
     rospy.init_node('setpoint_node', anonymous=True)
 
@@ -358,7 +360,7 @@ def main():
     rospy.Subscriber("/camera/proc_done", Bool, cnt.proc_done_Cb)
     #img_cmd = rospy.Publisher("/camera/take_img", Bool, queue_size=1)
 
-
+    print("after sub/pub...")
 
     #print("Waiting for image service")
     #rospy.wait_for_service("/camera/take_img")
@@ -379,7 +381,7 @@ def main():
     # activate OFFBOARD mode
 #    modes.setOffboardMode()
     # initlocalCb for local coordinates, initglobalCb for gps coordinates
-    
+    print("after init")
     if (localcoordinates):
         cnt.initlocalCb()
         # ROS main loop
@@ -390,10 +392,12 @@ def main():
             sp_pub.publish(cnt.sp)
             rate.sleep()
     else:
+        print("in else statement")
         cnt.initglobalCb()
         # ROS main loop
         while not rospy.is_shutdown():
             # cnt.updateSp for local coordinates, cnt.updateSetp for gps coordinates
+            #print("update")
             cnt.updateSetp()
             setpoint_global_pub.publish(cnt.setp)
             rate.sleep()

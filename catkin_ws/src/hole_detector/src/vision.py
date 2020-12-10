@@ -129,6 +129,7 @@ cap_pub = None
 # On new image, save image message and current gps position
 def image_callback(msg):
     global proc_data, cam, cap_pub
+    time.sleep(1.5)
     print("taking image")
     img = cam.capture()
     proc_data.append((img, current_pos, current_rot))
@@ -206,15 +207,19 @@ if __name__ == '__main__':
             rate.sleep()
         print("Processing image")
         img, pos, rot = proc_data.pop(0)
+        cv2.imwrite("/home/ubuntu/fence_imgs/orig.jpg", img)
 
         # Undistort
         img = cv2.remap(img, mx, my, cv2.INTER_LINEAR)
-
-        # Correct pitch
-        img = warp_image(img, np.degrees(rot[1]) - 20)
+        cv2.imwrite("/home/ubuntu/fence_imgs/undist.jpg", img)
 
         # Correct roll
-        img = imutils.rotate_bound(img, np.degrees(rot[2]))
+        img = imutils.rotate(img, np.degrees(-rot[2]))
+        cv2.imwrite("/home/ubuntu/fence_imgs/roll.jpg", img)
+
+        # Correct pitch
+        img = warp_image(img, np.degrees(rot[1]) + 20, K)
+        cv2.imwrite("/home/ubuntu/fence_imgs/warped.jpg", img)
 
         cnt += 1
         
