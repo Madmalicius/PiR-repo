@@ -19,6 +19,7 @@ import math
 import numpy as np
 from geographiclib.geodesic import Geodesic
 
+
 # Flight modes class
 # Flight modes are activated using ROS services
 class fcuModes:
@@ -116,17 +117,18 @@ class Controller:
         #########################################
 
         #Uncertainty for position control in meters
-        self.uncertain_dist = 0.15
+        self.uncertain_dist = 0.35
         #Uncertainty for angular control in radians
-        self.uncertain_rad = math.radians(2)
+        self.uncertain_rad = math.radians(5)
         #Set the altitude in meters
-        self.altitude = 2.5
+        self.altitude = 2
         # define the WGS84 ellipsoid
         self.geod = Geodesic.WGS84
         # image proccesing done
         self.proc_done = True
-        global take_image
-        take_image = False
+        self.take_image = True
+        self.check = True
+        self.cmd_send = False
 #################################################################################################################################################
         ### ------------SIMULATION------------ ###
         self.simulation = False
@@ -230,19 +232,22 @@ class Controller:
         return [yaw, pitch, roll]
 
     ## Starts caputuring image and returns when done
-    def capture_image_Cb(self):
-        self.capture = rospy.wait_for_message('/camera/cap_done', Bool)
-        self.check = self.capture.data
+    def capture_image_Cb(self, msg):
+        self.check = msg.data
         # try:
         #     take_photo = rospy.ServiceProxy('/camera/take_img', Trigger)
         #     take_photo()
         # except rospy.ServiceException as e:
         #     print("Service call failed: %s"%e)
-        return self.check
 
     def take_image_Cb(self):
-        img_cmd.publish(take_image)        
+        if (self.cmd_send == False):
+            img_cmd = rospy.Publisher("/camera/take_img", Bool, queue_size=1)
+            img_cmd.publish(self.take_image)
+            self.cmd_send = True
 
+    def proc_done_Cb(self, msg):
+        self.proc_done = msg.data
         #########################################
         #                                       #
     #####       Update setpoint functions       #####
@@ -295,21 +300,23 @@ class Controller:
         self.height = abs(self.local_coord.altitude - self.setp.pose.position.altitude)
         #print(y, p, r)
         #print(yaw, pitch, roll)
-        self.proc_done = self.capture_image_Cb()
         print("The distance is: {:.3f} m.".format(self.g['s12']), "The rotational error: {:.3f} degrees.".format(math.degrees(self.rotation)), "The altitude error: {:.3f} m.".format(self.height))
         #Update the setpoint
         if ((self.g['s12'] <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2) and self.proc_done):
             self.take_image_Cb()
-            if(not self.simulation):
-                print("Taking image")
-                self.proc_done = False
-            for line in range(10):
-                print("globaldiller")
-            self.setp.pose.position.latitude = float(self.coordinates[self.update][0])
-            self.setp.pose.position.longitude = float(self.coordinates[self.update][1])
-            #self.setp.pose.position.altitude = self.local_coord.altitude
-            self.setp.pose.orientation.x, self.setp.pose.orientation.y, self.setp.pose.orientation.z, self.setp.pose.orientation.w = self.euler_to_quaternion(0,0,math.radians(float(self.coordinates[self.update][2])))
-            self.update+=1
+            if (self.check == True):
+                if(not self.simulation):
+                    print("Taking image")
+                    self.check = False
+                    self.proc_done = False
+                    self.cmd_send = False
+                for line in range(10):
+                    print("globaldiller")
+                self.setp.pose.position.latitude = float(self.coordinates[self.update][0])
+                self.setp.pose.position.longitude = float(self.coordinates[self.update][1])
+                #self.setp.pose.position.altitude = self.local_coord.altitude
+                self.setp.pose.orientation.x, self.setp.pose.orientation.y, self.setp.pose.orientation.z, self.setp.pose.orientation.w = self.euler_to_quaternion(0,0,math.radians(float(self.coordinates[self.update][2])))
+                self.update+=1
 
         #########################################
         #                                       #
@@ -350,7 +357,8 @@ def main():
 
     # Subscribe to image prossing done flag
     rospy.Subscriber("/camera/cap_done", Bool, cnt.capture_image_Cb)
-    image_cmd = rospy.Publisher("/camera/proc_done", Bool, cnt.take_image_Cb, queue_size=1)
+    rospy.Subscriber("/camera/proc_done", Bool, cnt.proc_done_Cb)
+    #img_cmd = rospy.Publisher("/camera/take_img", Bool, queue_size=1)
 
 
 
@@ -389,7 +397,6 @@ def main():
         while not rospy.is_shutdown():
             # cnt.updateSp for local coordinates, cnt.updateSetp for gps coordinates
             cnt.updateSetp()
-            #sp_pub.publish(cnt.sp)
             setpoint_global_pub.publish(cnt.setp)
             rate.sleep()
 if __name__ == '__main__':
