@@ -128,6 +128,7 @@ class Controller:
         self.proc_done = True
         self.take_image = True
         self.check = True
+        self.img_cmd = rospy.Publisher("/camera/take_img", Bool, queue_size=1)
 #################################################################################################################################################
         ### ------------SIMULATION------------ ###
         self.simulation = False
@@ -233,25 +234,24 @@ class Controller:
     ## Starts caputuring image and returns when done
     def capture_image_Cb(self, msg):
         self.check = msg.data
+        print("capture image callback")
         # try:
         #     take_photo = rospy.ServiceProxy('/camera/take_img', Trigger)
         #     take_photo()
         # except rospy.ServiceException as e:
         #     print("Service call failed: %s"%e)
-
     def take_image_Cb(self):
         print("take image callback")
-        img_cmd = rospy.Publisher("/camera/take_img", Bool, queue_size=1)
-        img_cmd.publish(self.take_image)
+        self.img_cmd.publish(self.take_image)
 
     def proc_done_Cb(self, msg):
         self.proc_done = msg.data
+        print("proc done callback")
         #########################################
         #                                       #
     #####       Update setpoint functions       #####
         #                                       #
         #########################################
-
     ## Update local setpoint message
     def updateSp(self):
         #Calculate distance to point
@@ -300,8 +300,10 @@ class Controller:
         #print(yaw, pitch, roll)
         #print("The distance is: {:.3f} m.".format(self.g['s12']), "The rotational error: {:.3f} degrees.".format(math.degrees(self.rotation)), "The altitude error: {:.3f} m.".format(self.height))
         #Update the setpoint
-        if ((self.g['s12'] <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2) and self.proc_done):
+        #if ((self.g['s12'] <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2) and self.proc_done):
+        if (True):
             self.take_image_Cb()
+            print("halleluja")
             if (self.check == True):
                 print("got into check")
                 if(not self.simulation):
