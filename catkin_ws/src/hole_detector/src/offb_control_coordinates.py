@@ -121,7 +121,7 @@ class Controller:
         #Uncertainty for angular control in radians
         self.uncertain_rad = math.radians(5)
         #Set the altitude in meters
-        self.altitude = 2
+        self.altitude = 2.5
         # define the WGS84 ellipsoid
         self.geod = Geodesic.WGS84
         # image proccesing done
@@ -298,11 +298,12 @@ class Controller:
         self.height = abs(self.local_coord.altitude - self.setp.pose.position.altitude)
         #print(y, p, r)
         #print(yaw, pitch, roll)
-        print("The distance is: {:.3f} m.".format(self.g['s12']), "The rotational error: {:.3f} degrees.".format(math.degrees(self.rotation)), "The altitude error: {:.3f} m.".format(self.height))
+        #print("The distance is: {:.3f} m.".format(self.g['s12']), "The rotational error: {:.3f} degrees.".format(math.degrees(self.rotation)), "The altitude error: {:.3f} m.".format(self.height))
         #Update the setpoint
         if ((self.g['s12'] <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2) and self.proc_done):
             self.take_image_Cb()
             if (self.check == True):
+                print("got into check")
                 if(not self.simulation):
                     print("Taking image")
                     self.check = False
