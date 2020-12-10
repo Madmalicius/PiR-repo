@@ -18,7 +18,7 @@ class CameraController():
         #self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 2464) #3040
         self.cam = PiCamera()
         self.cam.resolution = (4056, 3040)
-        self.cam.framerate = 5
+        self.cam.framerate = 15
         self.cam.sharpness = 50
         #self.cam.iso = 100
         #self.cam.shutter_speed = 0#200      # shutter, or 0 for auto
