@@ -121,7 +121,7 @@ class Controller:
         #Uncertainty for angular control in radians
         self.uncertain_rad = math.radians(5)
         #Set the altitude in meters
-        self.altitude = 2.5
+        self.altitude = 2
         # define the WGS84 ellipsoid
         self.geod = Geodesic.WGS84
         # image proccesing done
