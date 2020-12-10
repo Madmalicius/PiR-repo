@@ -12,6 +12,7 @@ from GPSPhoto import gpsphoto
 from PIL import Image
 import imutils
 import time
+from warp_image_func import warp_image 
 
 
 class HoleDetector():
@@ -195,6 +196,8 @@ if __name__ == '__main__':
             rate.sleep()
         print("Processing image")
         img, pos, rot = proc_data.pop(0)
+
+        img = warp_image(img, rot[1])
 
         img = imutils.rotate(img, -rot[2])
 
