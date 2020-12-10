@@ -129,6 +129,7 @@ cap_pub = None
 # On new image, save image message and current gps position
 def image_callback(msg):
     global proc_data, cam, cap_pub
+    time.sleep(1.5)
     print("taking image")
     img = cam.capture()
     proc_data.append((img, current_pos, current_rot))
