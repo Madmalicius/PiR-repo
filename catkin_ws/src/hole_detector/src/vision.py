@@ -225,7 +225,8 @@ if __name__ == '__main__':
             print("Fault detected!")
             imgPath = imgDirPath + "/Err"+str(faultCount)
             cv2.imwrite(imgPath+".jpg",img)
-            ImgGPSCombiner(pos,imgPath)
+            if not pos is None:
+                ImgGPSCombiner(pos,imgPath)
             faultCount += 1
 
         proc_done = Bool()
