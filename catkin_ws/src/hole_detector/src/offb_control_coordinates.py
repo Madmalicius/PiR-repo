@@ -360,7 +360,7 @@ def main():
     rospy.Subscriber("/camera/proc_done", Bool, cnt.proc_done_Cb)
     #img_cmd = rospy.Publisher("/camera/take_img", Bool, queue_size=1)
 
-
+    print("after sub/pub...")
 
     #print("Waiting for image service")
     #rospy.wait_for_service("/camera/take_img")
@@ -381,7 +381,7 @@ def main():
     # activate OFFBOARD mode
 #    modes.setOffboardMode()
     # initlocalCb for local coordinates, initglobalCb for gps coordinates
-    
+    print("after init")
     if (localcoordinates):
         cnt.initlocalCb()
         # ROS main loop
