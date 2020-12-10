@@ -2,14 +2,14 @@ import numpy as np
 import cv2
 from math import cos, sin
 
-def warp_image(img, angle):
+def warp_image(img, angle, cam_mat):
     x = np.radians(-angle)
     y = np.radians(0)
     z = np.radians(180)
 
     w = img.shape[1]
     h = img.shape[0]
-    f = 277 #Focal length 
+    f = 77 #Focal length 
 
     dx = 0
     dy= 0
@@ -47,10 +47,11 @@ def warp_image(img, angle):
     [0, 0, 1, dz],
     [0, 0, 0, 1]])
 
-    A2 = np.array([
+    A2 = np.hstack((cam_mat, np.array([[0, 0, 0]]).T))
+    '''np.array([
     [f, 0, w/2, 0],
     [0, f, h/2, 0],
-    [0, 0, 1, 0]])
+    [0, 0, 1, 0]])'''
 
     trans = A2.dot(T.dot(rot_mat.dot(A1)))
 
