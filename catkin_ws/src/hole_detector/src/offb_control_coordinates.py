@@ -392,9 +392,9 @@ def main():
             sp_pub.publish(cnt.sp)
             rate.sleep()
     else:
+        print("in else statement")
         cnt.initglobalCb()
         # ROS main loop
-        print("in else statement")
         while not rospy.is_shutdown():
             # cnt.updateSp for local coordinates, cnt.updateSetp for gps coordinates
             print("update")
