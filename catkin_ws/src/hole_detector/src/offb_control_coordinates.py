@@ -121,14 +121,13 @@ class Controller:
         #Uncertainty for angular control in radians
         self.uncertain_rad = math.radians(5)
         #Set the altitude in meters
-        self.altitude = 2
+        self.altitude = 2.5
         # define the WGS84 ellipsoid
         self.geod = Geodesic.WGS84
         # image proccesing done
         self.proc_done = True
         self.take_image = True
         self.check = True
-        self.cmd_send = False
 #################################################################################################################################################
         ### ------------SIMULATION------------ ###
         self.simulation = False
@@ -241,10 +240,9 @@ class Controller:
         #     print("Service call failed: %s"%e)
 
     def take_image_Cb(self):
-        if (self.cmd_send == False):
-            img_cmd = rospy.Publisher("/camera/take_img", Bool, queue_size=1)
-            img_cmd.publish(self.take_image)
-            self.cmd_send = True
+        print("take image callback")
+        img_cmd = rospy.Publisher("/camera/take_img", Bool, queue_size=1)
+        img_cmd.publish(self.take_image)
 
     def proc_done_Cb(self, msg):
         self.proc_done = msg.data
@@ -300,16 +298,16 @@ class Controller:
         self.height = abs(self.local_coord.altitude - self.setp.pose.position.altitude)
         #print(y, p, r)
         #print(yaw, pitch, roll)
-        print("The distance is: {:.3f} m.".format(self.g['s12']), "The rotational error: {:.3f} degrees.".format(math.degrees(self.rotation)), "The altitude error: {:.3f} m.".format(self.height))
+        #print("The distance is: {:.3f} m.".format(self.g['s12']), "The rotational error: {:.3f} degrees.".format(math.degrees(self.rotation)), "The altitude error: {:.3f} m.".format(self.height))
         #Update the setpoint
         if ((self.g['s12'] <= self.uncertain_dist) and (self.rotation <= self.uncertain_rad) and (self.height <= self.uncertain_dist/2) and self.proc_done):
             self.take_image_Cb()
             if (self.check == True):
+                print("got into check")
                 if(not self.simulation):
                     print("Taking image")
                     self.check = False
                     self.proc_done = False
-                    self.cmd_send = False
                 for line in range(10):
                     print("globaldiller")
                 self.setp.pose.position.latitude = float(self.coordinates[self.update][0])
