@@ -397,7 +397,7 @@ def main():
         # ROS main loop
         while not rospy.is_shutdown():
             # cnt.updateSp for local coordinates, cnt.updateSetp for gps coordinates
-            print("update")
+            #print("update")
             cnt.updateSetp()
             setpoint_global_pub.publish(cnt.setp)
             rate.sleep()
