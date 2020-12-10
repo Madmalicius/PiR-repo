@@ -12,11 +12,8 @@ from GPSPhoto import gpsphoto
 from PIL import Image
 import imutils
 import time
-<<<<<<< HEAD
 import os
-=======
 from warp_image_func import warp_image 
->>>>>>> 004bbeff9770d6903d4f3b4ffd3973b48dc1c41d
 
 
 class HoleDetector():
