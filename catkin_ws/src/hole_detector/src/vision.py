@@ -12,6 +12,7 @@ from GPSPhoto import gpsphoto
 from PIL import Image
 import imutils
 import time
+import os
 
 
 class HoleDetector():
@@ -120,7 +121,7 @@ proc_data = []
 
 cam = None
 
-imgDirPath = "~/fence_imgs"
+imgDirPath = "/home/ubuntu/fence_imgs"
 faultCount = 0
 cap_pub = None
 
@@ -170,6 +171,7 @@ def ImgGPSCombiner(pos,imgPath):
     os.remove(imgPath+".jpg")
 
 if __name__ == '__main__':
+    print("Vision Node")
     cam = CameraController()
     hd = HoleDetector()
 
@@ -196,7 +198,7 @@ if __name__ == '__main__':
         print("Processing image")
         img, pos, rot = proc_data.pop(0)
 
-        img = imutils.rotate_bound(img, -rot[2])
+        img = imutils.rotate_bound(img, np.degrees(rot[2]))
 
         cnt += 1
         
