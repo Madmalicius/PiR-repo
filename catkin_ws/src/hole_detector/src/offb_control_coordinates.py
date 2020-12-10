@@ -117,7 +117,7 @@ class Controller:
         #########################################
 
         #Uncertainty for position control in meters
-        self.uncertain_dist = 0.35
+        self.uncertain_dist = 0.15
         #Uncertainty for angular control in radians
         self.uncertain_rad = math.radians(5)
         #Set the altitude in meters
