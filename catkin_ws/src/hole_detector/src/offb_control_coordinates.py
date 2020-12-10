@@ -125,13 +125,13 @@ class Controller:
         # define the WGS84 ellipsoid
         self.geod = Geodesic.WGS84
         # image proccesing done
-        self.proc_done = False
+        self.proc_done = True
         self.take_image = True
         self.check = True
         self.cmd_send = False
 #################################################################################################################################################
         ### ------------SIMULATION------------ ###
-        self.simulation = True
+        self.simulation = False
         ### ---------------------------------- ###
         global localcoordinates
         localcoordinates = False
