@@ -79,7 +79,7 @@ if [ -f ~/eit_ws/src/eit_playground/worlds/hca_airport_fence_complex.world ]; th
     echo "World file already exists"
 else
     pushd ~/eit_ws/src/eit_playground/worlds/
-        wget --no-check-certificate 'https://docs.google.com/uc?export=download&id=1b8MNieB_JLFnwehBVa12ll2kzuR6cK6_' -O hca_airport_fence_complex.world
+        wget --header 'Host: doc-00-bc-docs.googleusercontent.com' --user-agent 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:82.0) Gecko/20100101 Firefox/82.0' --header 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8' --header 'Accept-Language: en-US,en;q=0.5' --referer 'https://drive.google.com/drive/folders/17AFU4p_Sdx8LkFYFdu0QYXDO4p8DHIy8' --header 'Cookie: AUTH_08aoi9suu919kpbuterlgti9e89eemb0_nonce=keukqbemhj7gg' --header 'Upgrade-Insecure-Requests: 1' 'https://doc-00-bc-docs.googleusercontent.com/docs/securesc/8s0pc1bogt13qskbtsrb1bn0mtoe763v/ii3hhrmvl1p85vhrto4fe1t42b9dd17b/1607595975000/15606492013124874069/16707066989796886058/1b8MNieB_JLFnwehBVa12ll2kzuR6cK6_?e=download&authuser=0&nonce=keukqbemhj7gg&user=16707066989796886058&hash=198ctf9p49muua5kclqoqni47atn2438' --output-document 'hca_airport_fence_complex.world'
     popd
 fi
 
