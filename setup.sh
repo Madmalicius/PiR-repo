@@ -83,7 +83,7 @@ else
     popd
 fi
 
-if [ -d ~/eit_ws/src/eit_playground/models/fence_double_post]
+if [ -d ~/eit_ws/src/eit_playground/models/fence_double_post]; then
     echo "Fence models already exist"
 else
     pushd ~/eit_ws/src/eit_playground/models/
