@@ -211,10 +211,10 @@ if __name__ == '__main__':
         img = cv2.remap(img, mx, my, cv2.INTER_LINEAR)
 
         # Correct pitch
-        img = warp_image(img, np.degrees(rot[1]) - 20)
+        img = warp_image(img, np.degrees(rot[1]) + 20, K)
 
         # Correct roll
-        img = imutils.rotate_bound(img, np.degrees(rot[2]))
+        img = imutils.rotate(img, np.degrees(-rot[2]))
 
         cnt += 1
         
