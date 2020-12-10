@@ -326,7 +326,7 @@ class Controller:
 
 # Main function
 def main():
-
+    print("in main")
     # initiate node
     rospy.init_node('setpoint_node', anonymous=True)
 
@@ -396,6 +396,7 @@ def main():
         # ROS main loop
         while not rospy.is_shutdown():
             # cnt.updateSp for local coordinates, cnt.updateSetp for gps coordinates
+            print("update")
             cnt.updateSetp()
             setpoint_global_pub.publish(cnt.setp)
             rate.sleep()
