@@ -95,7 +95,7 @@ else
         unzip fence_hole1
         unzip fence_single
 
-        rm fence_double_post fence_hole1 fence_single
+        rm fence_double_post.zip fence_hole1.zip fence_single.zip
     popd
 fi
 
